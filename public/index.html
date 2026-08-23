@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a0616" />
+    <meta name="description" content="A simple way to practice thinking on your feet." />
+    <title>Basement</title>
+    <link rel="icon" type="image/png" href="/assets/basement-mark-white.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="brand-header">
+        <div class="brand-lockup">
+          <a class="brand-mark-link" href="/i" aria-label="Basement home"><img class="brand-logo" src="/assets/basement-mark-white.png" alt="" /></a>
+          <div class="brand-copy">
+            <a class="brand-name" href="/i">Basement</a>
+            <div class="made-by">made by <a href="https://x.com/mayorxbt" target="_blank" rel="noreferrer"><span class="x-mark" aria-hidden="true">×</span> @mayorxbt</a></div>
+          </div>
+        </div>
+      </header>
+
+      <main class="practice-stage">
+        <section class="setup" aria-label="Prompt setup">
+          <div class="mode-switch" role="group" aria-label="Speaking mode">
+            <button class="mode-option is-active" type="button" data-mode="off-the-cuff"><span class="mode-symbol" aria-hidden="true">◉</span><span>Off the cuff</span></button>
+            <button class="mode-option" type="button" data-mode="deep-research"><span class="mode-symbol" aria-hidden="true">⌕</span><span>Deep research</span></button>
+          </div>
+          <p class="mode-description" id="mode-description">Minimal prep. Try to think quick on your feet.</p>
+
+          <div class="niche-control" id="niche-control">
+            <select id="niche-select" class="sr-only" tabindex="-1" aria-hidden="true">
+              <option value="general">General</option><option value="personal-finance">Personal finance</option><option value="entrepreneurship">Entrepreneurship</option><option value="startups">Startups</option><option value="tech-ai">Tech / AI</option><option value="fitness">Fitness</option><option value="nutrition">Nutrition</option><option value="productivity">Productivity</option><option value="history">History</option><option value="literature">Literature</option>
+            </select>
+            <button class="niche-button" id="niche-button" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="niche-leading" id="niche-icon" aria-hidden="true">✦</span><span id="niche-label">General</span><span class="niche-chevron" aria-hidden="true">⌃</span></button>
+            <div class="niche-menu" id="niche-menu" role="listbox" aria-label="Choose a niche" hidden></div>
+          </div>
+        </section>
+
+        <section class="prompt-stage" aria-live="polite">
+          <p class="prompt-status" id="session-label">READY</p>
+          <h1 class="topic-text" id="topic-text">Waiting for a prompt</h1>
+          <span class="sr-only" id="topic-source">No topic selected</span>
+        </section>
+
+        <section class="actions" aria-label="Prompt actions">
+          <button class="primary-action" id="spin-button" type="button">Spin</button>
+          <button class="secondary-action" id="timer-button" type="button" disabled><span id="timer-button-label">Start 1 min timer</span></button>
+          <button class="settings-action" id="settings-button" type="button" aria-label="Open settings"><span aria-hidden="true">⚙</span></button>
+        </section>
+
+        <section class="timer-panel" id="timer-panel" hidden>
+          <div class="timer-dialog" role="dialog" aria-modal="true" aria-labelledby="timer-topic">
+            <div class="timer-dialog-top"><button class="timer-exit" id="timer-close" type="button">Exit</button><span id="timer-phase">Speech timer</span><button class="reset-button" id="reset-button" type="button">Reset</button></div>
+            <p class="timer-kicker">YOUR PROMPT</p>
+            <h2 class="timer-topic" id="timer-topic">Waiting for a prompt</h2>
+            <div class="timer-ring" aria-label="Time remaining">
+              <svg viewBox="0 0 220 220" aria-hidden="true"><circle class="timer-ring-track" cx="110" cy="110" r="96"></circle><circle class="timer-ring-progress" id="timer-ring-progress" cx="110" cy="110" r="96"></circle></svg>
+              <div class="timer-display" id="timer-display">01:00</div>
+            </div>
+            <div class="waveform-module" aria-label="Microphone activity">
+              <div class="waveform-visual"><span class="waveform-dot" id="waveform-dot" aria-hidden="true"></span><canvas class="waveform-canvas" id="waveform-canvas" width="520" height="72" aria-hidden="true"></canvas></div>
+              <div class="waveform-head"><span class="waveform-label" id="waveform-label">MIC STANDBY</span><span class="waveform-level" id="waveform-level">--</span></div>
+            </div>
+            <p class="timer-status" id="timer-status">The clock starts when you do.</p>
+            <div class="timer-actions">
+              <button class="timer-control" id="timer-modal-control" type="button">Pause timer</button>
+              <button class="analysis-action" id="analysis-button" type="button" hidden>Check analysis</button>
+            </div>
+          </div>
+        </section>
+
+        <canvas class="confetti-canvas" id="confetti-canvas" aria-hidden="true"></canvas>
+      </main>
+
+      <footer class="app-footer"><span>Think quick. Speak clearly.</span><span>Anonymous session</span></footer>
+    </div>
+
+    <div class="modal-backdrop" id="settings-modal" hidden>
+      <section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="modal-topline"><span>Session settings</span><button class="close-button" id="close-settings" type="button" aria-label="Close settings">Close</button></div>
+        <h2 id="settings-title">Settings</h2>
+        <div class="setting-row"><label for="speech-duration">Speech timer <output id="speech-duration-value">1 min</output></label><input id="speech-duration" type="range" min="1" max="10" step="1" value="1" /></div>
+        <div class="setting-row"><label for="research-duration">Research timer <output id="research-duration-value">10 min</output></label><input id="research-duration" type="range" min="1" max="30" step="1" value="10" /></div>
+        <label class="check-row" for="mute-sounds"><input id="mute-sounds" type="checkbox" /><span>Mute sound effects</span></label>
+        <button class="primary-action modal-save" id="save-settings" type="button">Save settings</button>
+      </section>
+    </div>
+
+    <div class="modal-backdrop analysis-backdrop" id="analysis-modal" hidden>
+      <section class="analysis-dialog" role="dialog" aria-modal="true" aria-labelledby="analysis-title">
+        <div class="modal-topline"><span>Session analysis</span><button class="close-button" id="close-analysis" type="button">Close</button></div>
+        <div class="analysis-heading">
+          <p class="analysis-kicker">MISSION COMPLETE</p>
+          <h2 id="analysis-title">A clear read on your delivery.</h2>
+          <p id="analysis-summary">Your local session signals are ready.</p>
+        </div>
+        <div class="analysis-metrics" aria-label="Speech metrics">
+          <div class="metric-row"><div class="metric-label"><span>Clarity</span><strong id="metric-clarity">--</strong></div><div class="metric-track"><span id="bar-clarity"></span></div><p id="detail-clarity">Waiting for your session.</p></div>
+          <div class="metric-row"><div class="metric-label"><span>Confidence</span><strong id="metric-confidence">--</strong></div><div class="metric-track"><span id="bar-confidence"></span></div><p id="detail-confidence">Waiting for your session.</p></div>
+          <div class="metric-row"><div class="metric-label"><span>Filler control</span><strong id="metric-filler">--</strong></div><div class="metric-track"><span id="bar-filler"></span></div><p id="detail-filler">Waiting for your session.</p></div>
+          <div class="metric-row"><div class="metric-label"><span>Speaking pace</span><strong id="metric-wpm">--</strong></div><div class="metric-track metric-track-neutral"><span id="bar-wpm"></span></div><p id="detail-wpm">Waiting for your session.</p></div>
+        </div>
+        <div class="analysis-details">
+          <div><span class="analysis-detail-label">Filler words</span><strong id="analysis-filler-count">--</strong></div>
+          <div><span class="analysis-detail-label">Long pauses</span><strong id="analysis-pause-count">--</strong></div>
+          <div><span class="analysis-detail-label">Words spoken</span><strong id="analysis-word-count">--</strong></div>
+          <div><span class="analysis-detail-label">Pitch span</span><strong id="analysis-pitch-range">--</strong></div>
+        </div>
+        <div class="transcript-block"><span class="analysis-detail-label">Live transcript</span><p id="analysis-transcript">No transcript captured yet.</p></div>
+        <div class="analysis-insights">
+          <div><span class="analysis-detail-label">What worked</span><ul id="analysis-strengths"><li>Delivery strengths will appear after the transcript is ready.</li></ul></div>
+          <div><span class="analysis-detail-label">Next move</span><ul id="analysis-improvements"><li>Specific speech corrections will appear after the transcript is ready.</li></ul></div>
+        </div>
+      </section>
+    </div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

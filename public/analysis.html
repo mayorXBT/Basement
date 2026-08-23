@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a0616" />
+    <meta name="description" content="Your Basement speaking session analysis." />
+    <title>Session analysis | Basement</title>
+    <link rel="icon" type="image/png" href="/assets/basement-mark-white.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="analysis-page-body">
+    <div class="analysis-page-shell">
+      <header class="analysis-page-header">
+        <div class="brand-lockup">
+          <a class="brand-mark-link" href="/i" aria-label="Basement home"><img class="brand-logo" src="/assets/basement-mark-white.png" alt="" /></a>
+          <div class="brand-copy">
+            <a class="brand-name" href="/i">Basement</a>
+            <div class="made-by">made by <a href="https://x.com/mayorxbt" target="_blank" rel="noreferrer">@mayorxbt</a></div>
+          </div>
+        </div>
+        <a class="analysis-back-link" href="/i">Back to practice</a>
+      </header>
+      <main class="analysis-page-main">
+        <div class="analysis-page-intro"><p class="analysis-kicker">SESSION ANALYSIS</p><h1>Make the next take sharper.</h1><p id="analysis-page-topic">Your delivery, broken down.</p></div>
+        <section class="analysis-screen" aria-live="polite">
+          <div class="analysis-heading"><p class="analysis-kicker">MISSION COMPLETE</p><h2 id="analysis-title">A clear read on your delivery.</h2><p id="analysis-summary">Loading your session signals…</p></div>
+          <div class="analysis-metrics" aria-label="Speech metrics">
+            <div class="metric-row"><div class="metric-label"><span>Clarity</span><strong id="metric-clarity">--</strong></div><div class="metric-track"><span id="bar-clarity"></span></div><p id="detail-clarity">Waiting for your session.</p></div>
+            <div class="metric-row"><div class="metric-label"><span>Confidence</span><strong id="metric-confidence">--</strong></div><div class="metric-track"><span id="bar-confidence"></span></div><p id="detail-confidence">Waiting for your session.</p></div>
+            <div class="metric-row"><div class="metric-label"><span>Filler control</span><strong id="metric-filler">--</strong></div><div class="metric-track"><span id="bar-filler"></span></div><p id="detail-filler">Waiting for your session.</p></div>
+            <div class="metric-row"><div class="metric-label"><span>Speaking pace</span><strong id="metric-wpm">--</strong></div><div class="metric-track metric-track-neutral"><span id="bar-wpm"></span></div><p id="detail-wpm">Waiting for your session.</p></div>
+          </div>
+          <div class="analysis-details"><div><span class="analysis-detail-label">Filler words</span><strong id="analysis-filler-count">--</strong></div><div><span class="analysis-detail-label">Long pauses</span><strong id="analysis-pause-count">--</strong></div><div><span class="analysis-detail-label">Words spoken</span><strong id="analysis-word-count">--</strong></div><div><span class="analysis-detail-label">Pitch span</span><strong id="analysis-pitch-range">--</strong></div></div>
+          <div class="transcript-block"><span class="analysis-detail-label">Live transcript</span><p id="analysis-transcript">No transcript captured yet.</p></div>
+          <div class="analysis-insights"><div><span class="analysis-detail-label">What worked</span><ul id="analysis-strengths"><li>Delivery strengths will appear after the transcript is ready.</li></ul></div><div><span class="analysis-detail-label">Next move</span><ul id="analysis-improvements"><li>Specific speech corrections will appear after the transcript is ready.</li></ul></div></div>
+        </section>
+      </main>
+    </div>
+    <script src="/analysis.js" defer></script>
+  </body>
+</html>
