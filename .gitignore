@@ -3,6 +3,8 @@ node_modules/
 .env.*
 !.env.example
 *.png
+!public/assets/*.png
+public/assets/*-source.png
 *.mhtml
 .gstack/
 
