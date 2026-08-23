@@ -11,7 +11,7 @@ const metricEls = {
   clarityBar: document.querySelector("#bar-clarity"), confidenceBar: document.querySelector("#bar-confidence"), fillerBar: document.querySelector("#bar-filler"), wpmBar: document.querySelector("#bar-wpm"),
   clarityDetail: document.querySelector("#detail-clarity"), confidenceDetail: document.querySelector("#detail-confidence"), fillerDetail: document.querySelector("#detail-filler"), wpmDetail: document.querySelector("#detail-wpm")
 };
-const state = { mode: "off-the-cuff", niche: "general", topic: "", phase: "idle", remaining: 0, total: 0, interval: null, settings: { ...defaultSettings, ...(storedSettings || {}) }, recording: null, analysis: null };
+const state = { mode: "off-the-cuff", niche: "general", topic: "", phase: "idle", remaining: 0, total: 0, interval: null, settings: { ...defaultSettings, ...(storedSettings || {}) }, recording: null, analysis: null, topicHistory: [] };
 const spinTopics = ["The art of making mistakes", "A room with no windows", "The last good surprise", "Rules worth breaking", "A story you tell yourself", "The quietest person in the room", "What makes a place feel like home", "The useful detour"];
 
 function formatTime(seconds) { return `${Math.floor(seconds / 60).toString().padStart(2, "0")}:${(seconds % 60).toString().padStart(2, "0")}`; }
@@ -175,9 +175,25 @@ function updateModalLabel() { if (state.phase === "research") els.timerControl.t
 function setMode(mode) { state.mode = mode; els.modeOptions.forEach((button) => button.classList.toggle("is-active", button.dataset.mode === mode)); els.modeDescription.textContent = modeCopy[mode]; els.nicheControl.hidden = mode === "deep-research"; els.session.textContent = "READY"; resetTimer(); toggleNicheMenu(false); }
 
 async function spin() {
-  els.spin.disabled = true; els.session.textContent = "THINKING"; els.source.textContent = "Generating a topic"; els.topic.classList.add("is-spinning"); els.topic.textContent = spinTopics[Math.floor(Math.random() * spinTopics.length)]; chirp(520);
+  els.spin.disabled = true; els.session.textContent = "THINKING"; els.source.textContent = "Generating a fresh topic"; els.topic.classList.add("is-spinning"); els.topic.textContent = spinTopics[Math.floor(Math.random() * spinTopics.length)]; chirp(520);
   const reel = window.setInterval(() => { els.topic.textContent = spinTopics[Math.floor(Math.random() * spinTopics.length)]; }, 115);
-  try { const response = await fetch("/api/spin", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mode: state.mode, niche: state.niche }) }); if (!response.ok) throw new Error("Spin failed"); const result = await response.json(); state.topic = result.topic; els.topic.textContent = result.topic; els.timerTopic.textContent = result.topic; els.source.textContent = result.source === "gemini" ? "Gemini generated topic" : "Local fallback topic"; els.session.textContent = "READY"; els.timer.disabled = false; updateTimerLabel(); updateModalLabel(); chirp(660, .12); } catch { els.session.textContent = "TRY AGAIN"; els.source.textContent = "Topic generation unavailable"; els.topic.textContent = "Spin again"; } finally { window.clearInterval(reel); els.topic.classList.remove("is-spinning"); els.spin.disabled = false; }
+  try {
+    const response = await fetch("/api/spin", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mode: state.mode, niche: state.niche, recentTopics: state.topicHistory.slice(-20) }) });
+    if (!response.ok) throw new Error("Spin failed");
+    const result = await response.json();
+    state.topic = result.topic;
+    state.topicHistory = [...state.topicHistory.filter((topic) => topic.toLowerCase() !== result.topic.toLowerCase()), result.topic].slice(-20);
+    els.topic.textContent = result.topic;
+    els.timerTopic.textContent = result.topic;
+    els.source.textContent = result.source === "gemini"
+      ? "Gemini generated topic"
+      : result.reason === "quota_or_rate_limit"
+        ? "Fresh local topic · Gemini rate limited"
+        : result.reason === "invalid_or_restricted_key"
+          ? "Fresh local topic · check Gemini key"
+          : "Fresh local topic pool";
+    els.session.textContent = "READY"; els.timer.disabled = false; updateTimerLabel(); updateModalLabel(); chirp(660, .12);
+  } catch { els.session.textContent = "TRY AGAIN"; els.source.textContent = "Topic generation unavailable"; els.topic.textContent = "Spin again"; } finally { window.clearInterval(reel); els.topic.classList.remove("is-spinning"); els.spin.disabled = false; }
 }
 function startTimer() { if (!state.topic || state.interval) return; state.phase = state.mode === "deep-research" ? "research" : "speech"; state.total = (state.phase === "research" ? state.settings.researchMinutes : state.settings.speechMinutes) * 60; state.remaining = state.total; els.timerTopic.textContent = state.topic; els.panel.hidden = false; els.phase.textContent = state.phase === "research" ? "Research timer" : "Speech timer"; els.status.textContent = state.phase === "research" ? "Build your angle. Then start speaking." : "The clock starts when you do."; setWaveformState(state.phase === "speech" ? "MIC STARTING" : "RESEARCH MODE"); renderTimer(); state.interval = window.setInterval(tick, 1000); if (state.phase === "speech") startRecording(); updateTimerLabel(); updateModalLabel(); chirp(760); }
 function tick() { state.remaining -= 1; if (state.phase === "speech" && state.recording) state.recording.timerSeconds += 1; renderTimer(); if (state.remaining <= 0) finishPhase(); }
