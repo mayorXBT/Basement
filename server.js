@@ -311,10 +311,30 @@ async function transcribeWithDeepgram(buffer, contentType) {
   return { transcript, words, wordCount: countTranscriptWords(transcript), fillerCount: countTranscriptFillers(transcript), duration: Number(data?.metadata?.duration || 0), provider: "deepgram" };
 }
 
+const TRANSCRIBE_AUDIO_TYPES = new Set([
+  "audio/webm", "audio/ogg", "audio/wav", "audio/x-wav", "audio/mpeg",
+  "audio/mp4", "audio/m4a", "audio/x-m4a", "audio/aac",
+  "video/webm", "video/mp4",
+  "application/octet-stream"
+]);
+
+function normalizeAudioContentType(header) {
+  return String(header || "").split(";", 1)[0].trim().toLowerCase();
+}
+
+function transcriptionFilename(contentType) {
+  const type = normalizeAudioContentType(contentType);
+  if (type.includes("mp4") || type.includes("m4a") || type === "audio/aac") return "basement-session.m4a";
+  if (type.includes("mpeg")) return "basement-session.mp3";
+  if (type.includes("wav")) return "basement-session.wav";
+  if (type.includes("ogg")) return "basement-session.ogg";
+  return "basement-session.webm";
+}
+
 async function transcribeWithGroq(buffer, contentType) {
   const key = process.env.GROQ_API_KEY;
   if (!key) return null;
-  const form = new FormData(); form.append("file", new Blob([buffer], { type: contentType || "audio/webm" }), "basement-session.webm"); form.append("model", process.env.GROQ_TRANSCRIPTION_MODEL || "whisper-large-v3-turbo"); form.append("response_format", "verbose_json"); form.append("timestamp_granularities[]", "word");
+  const form = new FormData(); form.append("file", new Blob([buffer], { type: contentType || "audio/webm" }), transcriptionFilename(contentType)); form.append("model", process.env.GROQ_TRANSCRIPTION_MODEL || "whisper-large-v3-turbo"); form.append("response_format", "verbose_json"); form.append("timestamp_granularities[]", "word");
   const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", { method: "POST", headers: { Authorization: `Bearer ${key}` }, body: form, signal: AbortSignal.timeout(30000) });
   if (!response.ok) throw new Error(`Groq returned ${response.status}`);
   const data = await response.json(); const transcript = data?.text || "";
@@ -354,9 +374,9 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true, geminiConfigured: Boolean(process.env.GEMINI_API_KEY), groqConfigured: Boolean(process.env.GROQ_API_KEY), deepgramConfigured: Boolean(process.env.DEEPGRAM_API_KEY) });
 });
 
-app.post("/api/transcribe", providerRateLimit, express.raw({ type: ["audio/*", "video/webm", "application/octet-stream"], limit: "25mb" }), async (req, res) => {
-  const contentType = String(req.headers["content-type"] || "").split(";", 1)[0].toLowerCase();
-  if (!["audio/webm", "audio/ogg", "audio/wav", "audio/x-wav", "audio/mpeg", "video/webm", "application/octet-stream"].includes(contentType)) return res.status(415).json({ error: "Unsupported audio content type." });
+app.post("/api/transcribe", providerRateLimit, express.raw({ type: ["audio/*", "video/webm", "video/mp4", "application/octet-stream"], limit: "25mb" }), async (req, res) => {
+  const contentType = normalizeAudioContentType(req.headers["content-type"]);
+  if (!TRANSCRIBE_AUDIO_TYPES.has(contentType)) return res.status(415).json({ error: "Unsupported audio content type." });
   if (Number(req.headers["content-length"] || 0) > MAX_AUDIO_BYTES) return res.status(413).json({ error: "Audio file is too large." });
   if (!Buffer.isBuffer(req.body) || req.body.length === 0) return res.status(400).json({ error: "Audio data is required." });
   const result = await transcribeAudio(req.body, contentType);

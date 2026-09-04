@@ -61,9 +61,25 @@ function estimatePitch(samples, sampleRate) {
 }
 function drawWaveform(samples, active) {
   const canvas = els.waveform; const context = canvas.getContext("2d"); if (!context) return; const width = canvas.width; const height = canvas.height; context.clearRect(0, 0, width, height); const bars = 15; const barWidth = 10; const gap = 12; const totalWidth = bars * barWidth + (bars - 1) * gap; const startX = (width - totalWidth) / 2;
-  for (let index = 0; index < bars; index += 1) { const from = Math.floor(index * samples.length / bars); const to = Math.max(from + 1, Math.floor((index + 1) * samples.length / bars)); let energy = 0; for (let sampleIndex = from; sampleIndex < to; sampleIndex += 1) { const centered = (samples[sampleIndex] - 128) / 128; energy += centered * centered; } const rms = Math.sqrt(energy / (to - from)); const barHeight = active ? clamp(8 + rms * 260, 6, height - 8) : 5; const x = startX + index * (barWidth + gap); const y = (height - barHeight) / 2; context.fillStyle = active ? "#a080c0" : "rgba(160, 128, 192, .3)"; context.beginPath(); context.roundRect(x, y, barWidth, barHeight, barWidth / 2); context.fill(); }
+  for (let index = 0; index < bars; index += 1) { const from = Math.floor(index * samples.length / bars); const to = Math.max(from + 1, Math.floor((index + 1) * samples.length / bars)); let energy = 0; for (let sampleIndex = from; sampleIndex < to; sampleIndex += 1) { const centered = (samples[sampleIndex] - 128) / 128; energy += centered * centered; } const rms = Math.sqrt(energy / (to - from)); const barHeight = active ? clamp(8 + rms * 260, 6, height - 8) : 5; const x = startX + index * (barWidth + gap); const y = (height - barHeight) / 2; context.fillStyle = active ? "#a080c0" : "rgba(160, 128, 192, .3)"; context.beginPath(); if (typeof context.roundRect === "function") context.roundRect(x, y, barWidth, barHeight, barWidth / 2); else context.rect(x, y, barWidth, barHeight); context.fill(); }
 }
 function newRecording() { let resolveBlob; const blobReady = new Promise((resolve) => { resolveBlob = resolve; }); return { active: true, paused: false, token: Symbol("recording"), stream: null, mediaRecorder: null, chunks: [], blobReady, resolveBlob, recognition: null, audioContext: null, analyser: null, audioFrame: null, lastSampleAt: 0, silenceStartedAt: null, hasHeardVoice: false, pauses: 0, speakingMs: 0, timerSeconds: 0, pitchSum: 0, pitchCount: 0, pitchMin: 0, pitchMax: 0, transcript: "", error: "", transcriptionProvider: "browser" }; }
+const recorderMimeTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4;codecs=mp4a.40.2", "audio/mp4", "audio/aac"];
+function isIosBrowser() { // SpeechRecognition plus MediaRecorder on one WebKit mic stream fails.
+  const ua = navigator.userAgent || "";
+  return /iP(hone|ad|od)/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+function pickRecorderMimeType() {
+  if (!window.MediaRecorder?.isTypeSupported) return "";
+  return recorderMimeTypes.find((type) => { try { return MediaRecorder.isTypeSupported(type); } catch { return false; } }) || "";
+}
+function microphoneErrorMessage(error) {
+  if (error?.name === "NotAllowedError") return "Microphone access was denied.";
+  if (error?.name === "NotFoundError") return "No microphone was found.";
+  if (error?.name === "NotReadableError") return "The microphone is in use by another app.";
+  if (error?.name === "SecurityError") return "Microphone access needs HTTPS.";
+  return "Microphone access is unavailable.";
+}
 function startAudioMonitor(recording) {
   if (!recording.analyser) return;
   const samples = new Uint8Array(recording.analyser.fftSize);
@@ -84,19 +100,49 @@ function startRecognition(recording) {
   recording.recognition = recognition; try { recognition.start(); } catch { /* Speech recognition is optional. */ }
 }
 async function startRecording() {
-  stopRecording(); const recording = newRecording(); state.recording = recording; const hasMic = navigator.mediaDevices?.getUserMedia;
-  if (!hasMic) { recording.error = "Microphone access is unavailable in this browser."; recording.resolveBlob(null); setWaveformState("MIC UNAVAILABLE"); return; }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    if (state.recording !== recording || !recording.active || state.phase !== "speech") { stream.getTracks().forEach((track) => track.stop()); return; }
-    recording.stream = stream; startRecognition(recording);
-    if (window.MediaRecorder) { const mimeType = ["audio/webm;codecs=opus", "audio/webm"].find((type) => MediaRecorder.isTypeSupported(type)); recording.mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined); recording.mediaRecorder.ondataavailable = (event) => { if (event.data.size) recording.chunks.push(event.data); }; recording.mediaRecorder.onstop = () => { recording.resolveBlob(recording.chunks.length ? new Blob(recording.chunks, { type: recording.mediaRecorder.mimeType || "audio/webm" }) : null); }; recording.mediaRecorder.start(250); }
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext; if (AudioContextClass) { recording.audioContext = new AudioContextClass(); const source = recording.audioContext.createMediaStreamSource(stream); recording.analyser = recording.audioContext.createAnalyser(); recording.analyser.fftSize = 512; source.connect(recording.analyser); startAudioMonitor(recording); }
-    setWaveformState("MIC LIVE", "LISTENING"); els.status.textContent = "Recording locally. The clock starts when you do.";
-  } catch (error) { recording.error = error.name === "NotAllowedError" ? "Microphone access was denied." : "Microphone access is unavailable."; recording.resolveBlob(null); setWaveformState("MIC UNAVAILABLE"); els.status.textContent = "Timer running. Mic analysis is unavailable."; }
+  stopRecording(); const recording = newRecording(); state.recording = recording;
+  if (!navigator.mediaDevices?.getUserMedia) { recording.error = "Microphone access is unavailable in this browser."; recording.resolveBlob(null); setWaveformState("MIC UNAVAILABLE"); return; }
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (AudioContextClass) { recording.audioContext = new AudioContextClass(); recording.audioContext.resume().catch(() => {}); }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (error) {
+    recording.error = microphoneErrorMessage(error); recording.resolveBlob(null); setWaveformState("MIC UNAVAILABLE"); els.status.textContent = recording.error;
+    if (recording.audioContext) recording.audioContext.close().catch(() => {}); recording.audioContext = null; return;
+  }
+  if (state.recording !== recording || !recording.active || state.phase !== "speech") { stream.getTracks().forEach((track) => track.stop()); if (recording.audioContext) recording.audioContext.close().catch(() => {}); return; }
+  recording.stream = stream;
+  if (!isIosBrowser()) startRecognition(recording);
+  if (window.MediaRecorder) {
+    try {
+      const mimeType = pickRecorderMimeType();
+      recording.mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      recording.mediaRecorder.ondataavailable = (event) => { if (event.data.size) recording.chunks.push(event.data); };
+      recording.mediaRecorder.onstop = () => { recording.resolveBlob(recording.chunks.length ? new Blob(recording.chunks, { type: recording.mediaRecorder.mimeType || mimeType || "audio/webm" }) : null); };
+      try { recording.mediaRecorder.start(1000); } catch { recording.mediaRecorder.start(); }
+    } catch { recording.error = "This browser could not start an audio recorder."; recording.resolveBlob(null); }
+  } else recording.resolveBlob(null);
+  if (recording.audioContext) {
+    if (recording.audioContext.state === "suspended") recording.audioContext.resume().catch(() => {});
+    try {
+      const source = recording.audioContext.createMediaStreamSource(stream);
+      recording.analyser = recording.audioContext.createAnalyser(); recording.analyser.fftSize = 512; source.connect(recording.analyser); startAudioMonitor(recording);
+    } catch { /* Waveform is optional. */ }
+  }
+  setWaveformState("MIC LIVE", "LISTENING"); els.status.textContent = "Recording locally. The clock starts when you do.";
 }
-function pauseRecording() { const recording = state.recording; if (!recording) return; recording.paused = true; setWaveformState("MIC PAUSED"); if (recording.mediaRecorder?.state === "recording") recording.mediaRecorder.pause(); const recognition = recording.recognition; recording.recognition = null; if (recognition) { try { recognition.stop(); } catch { /* Optional browser API. */ } } }
-function resumeRecording() { const recording = state.recording; if (!recording) return; recording.paused = false; setWaveformState("MIC LIVE", "LISTENING"); if (recording.mediaRecorder?.state === "paused") recording.mediaRecorder.resume(); startRecognition(recording); }
+function pauseRecording() {
+  const recording = state.recording; if (!recording) return; recording.paused = true; setWaveformState("MIC PAUSED");
+  try { if (recording.mediaRecorder?.state === "recording") recording.mediaRecorder.pause(); } catch { /* Safari may not pause MediaRecorder. */ }
+  if (recording.audioContext?.state === "running") recording.audioContext.suspend().catch(() => {});
+  const recognition = recording.recognition; recording.recognition = null; if (recognition) { try { recognition.stop(); } catch { /* Optional browser API. */ } }
+}
+function resumeRecording() {
+  const recording = state.recording; if (!recording) return; recording.paused = false; setWaveformState("MIC LIVE", "LISTENING");
+  try { if (recording.mediaRecorder?.state === "paused") recording.mediaRecorder.resume(); } catch { /* Safari may not resume MediaRecorder. */ }
+  if (recording.audioContext?.state === "suspended") recording.audioContext.resume().catch(() => {});
+  if (!isIosBrowser()) startRecognition(recording);
+}
 function stopRecording() { const recording = state.recording; if (!recording) return null; recording.active = false; setWaveformState("MIC OFF"); clearWaveform(); if (recording.audioFrame) window.cancelAnimationFrame(recording.audioFrame); if (recording.recognition) { try { recording.recognition.abort(); } catch { /* Optional browser API. */ } } if (recording.mediaRecorder?.state && recording.mediaRecorder.state !== "inactive") { try { recording.mediaRecorder.stop(); } catch { recording.resolveBlob(null); /* Optional browser API. */ } } else if (!recording.chunks.length) recording.resolveBlob(null); recording.stream?.getTracks().forEach((track) => track.stop()); if (recording.audioContext) recording.audioContext.close().catch(() => {}); state.recording = null; return recording; }
 function countWords(text) { return (text.match(/[A-Za-z0-9][A-Za-z0-9'’-]*/g) || []).length; }
 function countFillers(text) { return (text.match(/\b(?:um+|uh+|er+|like|you know|basically|actually|literally|sort of|kind of)\b/gi) || []).length; }
@@ -197,7 +243,7 @@ async function spin() {
 }
 function startTimer() { if (!state.topic || state.interval) return; state.phase = state.mode === "deep-research" ? "research" : "speech"; state.total = (state.phase === "research" ? state.settings.researchMinutes : state.settings.speechMinutes) * 60; state.remaining = state.total; els.timerTopic.textContent = state.topic; els.panel.hidden = false; els.phase.textContent = state.phase === "research" ? "Research timer" : "Speech timer"; els.status.textContent = state.phase === "research" ? "Build your angle. Then start speaking." : "The clock starts when you do."; setWaveformState(state.phase === "speech" ? "MIC STARTING" : "RESEARCH MODE"); renderTimer(); state.interval = window.setInterval(tick, 1000); if (state.phase === "speech") startRecording(); updateTimerLabel(); updateModalLabel(); chirp(760); }
 function tick() { state.remaining -= 1; if (state.phase === "speech" && state.recording) state.recording.timerSeconds += 1; renderTimer(); if (state.remaining <= 0) finishPhase(); }
-function finishPhase() { window.clearInterval(state.interval); state.interval = null; chirp(880, .22); if (state.phase === "research") { state.phase = "speech"; state.total = state.settings.speechMinutes * 60; state.remaining = state.total; els.phase.textContent = "Speech timer"; els.status.textContent = "Research complete. Take the floor."; renderTimer(); startRecording(); updateTimerLabel(); updateModalLabel(); return; } const recording = stopRecording(); state.phase = "complete"; state.analysis = buildAnalysis(recording); renderAnalysis(state.analysis); processCompletedRecording(recording); els.status.textContent = "Mission complete. Nice work."; completionSound(); fireConfetti(); updateTimerLabel(); updateModalLabel(); }
+function finishPhase() { window.clearInterval(state.interval); state.interval = null; chirp(880, .22); if (state.phase === "research") { state.phase = "speech"; state.total = state.settings.speechMinutes * 60; state.remaining = state.total; els.phase.textContent = "Speech timer"; els.status.textContent = "Research complete. Tap Start speech when you are ready."; renderTimer(); updateTimerLabel(); updateModalLabel(); return; } const recording = stopRecording(); state.phase = "complete"; state.analysis = buildAnalysis(recording); renderAnalysis(state.analysis); processCompletedRecording(recording); els.status.textContent = "Mission complete. Nice work."; completionSound(); fireConfetti(); updateTimerLabel(); updateModalLabel(); }
 function renderTimer() { const ratio = state.total ? Math.max(0, state.remaining / state.total) : 1; els.display.textContent = formatTime(Math.max(0, state.remaining)); els.ringProgress.style.strokeDashoffset = `${603.19 * (1 - ratio)}`; }
 function resetTimer() { window.clearInterval(state.interval); state.interval = null; stopRecording(); state.phase = "idle"; state.remaining = 0; state.total = 0; state.analysis = null; els.panel.hidden = true; els.timer.disabled = !state.topic; updateTimerLabel(); updateModalLabel(); }
 function closeTimerModal() { window.clearInterval(state.interval); state.interval = null; if (state.phase === "speech") stopRecording(); els.panel.hidden = true; updateTimerLabel(); updateModalLabel(); }
@@ -211,7 +257,7 @@ els.nicheButton.addEventListener("click", () => toggleNicheMenu());
 els.nicheMenu.addEventListener("click", (event) => { const option = event.target.closest("[data-niche]"); if (!option) return; state.niche = option.dataset.niche; renderNiche(); toggleNicheMenu(false); chirp(400); });
 els.spin.addEventListener("click", spin);
 els.timer.addEventListener("click", () => { if (state.phase === "complete") resetTimer(); if (state.phase !== "idle" && state.remaining > 0) { els.timerTopic.textContent = state.topic; els.panel.hidden = false; updateModalLabel(); return; } startTimer(); });
-els.timerControl.addEventListener("click", () => { if (state.phase === "complete") { closeTimerModal(); return; } if (state.interval) { window.clearInterval(state.interval); state.interval = null; if (state.phase === "speech") pauseRecording(); els.status.textContent = "Timer paused."; updateTimerLabel(); updateModalLabel(); return; } if (state.phase === "speech" || state.phase === "research") { state.interval = window.setInterval(tick, 1000); if (state.phase === "speech") resumeRecording(); els.status.textContent = state.phase === "research" ? "Build your angle. Then start speaking." : "The clock starts when you do."; updateTimerLabel(); updateModalLabel(); return; } startTimer(); });
+els.timerControl.addEventListener("click", () => { if (state.phase === "complete") { closeTimerModal(); return; } if (state.interval) { window.clearInterval(state.interval); state.interval = null; if (state.phase === "speech") pauseRecording(); els.status.textContent = "Timer paused."; updateTimerLabel(); updateModalLabel(); return; } if (state.phase === "speech" || state.phase === "research") { state.interval = window.setInterval(tick, 1000); if (state.phase === "speech") { if (state.recording) resumeRecording(); else startRecording(); } els.status.textContent = state.phase === "research" ? "Build your angle. Then start speaking." : "The clock starts when you do."; updateTimerLabel(); updateModalLabel(); return; } startTimer(); });
 els.timerClose.addEventListener("click", closeTimerModal);
 els.analysisButton.addEventListener("click", openAnalysis); els.closeAnalysis.addEventListener("click", closeAnalysis); els.analysisModal.addEventListener("click", (event) => { if (event.target === els.analysisModal) closeAnalysis(); });
 els.reset.addEventListener("click", resetTimer); els.openSettings.addEventListener("click", openSettings); els.closeSettings.addEventListener("click", closeSettings); els.saveSettings.addEventListener("click", saveSettings); els.modal.addEventListener("click", (event) => { if (event.target === els.modal) closeSettings(); });
