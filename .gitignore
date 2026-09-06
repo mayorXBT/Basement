@@ -9,3 +9,4 @@ public/assets/*-source.png
 .gstack/
 
 .vercel
+.worktrees/
