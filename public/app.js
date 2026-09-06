@@ -11,7 +11,7 @@ const metricEls = {
   clarityBar: document.querySelector("#bar-clarity"), confidenceBar: document.querySelector("#bar-confidence"), fillerBar: document.querySelector("#bar-filler"), wpmBar: document.querySelector("#bar-wpm"),
   clarityDetail: document.querySelector("#detail-clarity"), confidenceDetail: document.querySelector("#detail-confidence"), fillerDetail: document.querySelector("#detail-filler"), wpmDetail: document.querySelector("#detail-wpm")
 };
-const state = { mode: "off-the-cuff", niche: "general", topic: "", phase: "idle", remaining: 0, total: 0, interval: null, settings: { ...defaultSettings, ...(storedSettings || {}) }, recording: null, analysis: null, topicHistory: [] };
+const state = { mode: "off-the-cuff", niche: "general", topic: "", phase: "idle", remaining: 0, total: 0, interval: null, settings: { ...defaultSettings, ...(storedSettings || {}) }, recording: null, analysis: null, analysisToken: null, topicHistory: [] };
 const spinTopics = ["The art of making mistakes", "A room with no windows", "The last good surprise", "Rules worth breaking", "A story you tell yourself", "The quietest person in the room", "What makes a place feel like home", "The useful detour"];
 
 function formatTime(seconds) { return `${Math.floor(seconds / 60).toString().padStart(2, "0")}:${(seconds % 60).toString().padStart(2, "0")}`; }
@@ -96,8 +96,9 @@ function startRecognition(recording) {
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!Recognition) return;
   const recognition = new Recognition(); recognition.continuous = true; recognition.interimResults = false; recognition.lang = "en-US";
   recognition.onresult = (event) => { recording.transcript = Array.from(event.results).map((result) => result[0]?.transcript || "").join(" ").trim(); };
-  recognition.onend = () => { if (recording.active && !recording.paused && state.recording === recording && recording.recognition === recognition) { try { recognition.start(); } catch { /* The browser may already be restarting recognition. */ } } };
-  recording.recognition = recognition; try { recognition.start(); } catch { /* Speech recognition is optional. */ }
+  const stillThis = () => recording.active && !recording.paused && state.recording === recording && recording.recognition === recognition;
+  recognition.onend = () => { if (stillThis()) startSpeechRecognition(recognition, stillThis); };
+  recording.recognition = recognition; startSpeechRecognition(recognition, stillThis);
 }
 async function startRecording() {
   stopRecording(); const recording = newRecording(); state.recording = recording;
@@ -143,7 +144,7 @@ function resumeRecording() {
   if (recording.audioContext?.state === "suspended") recording.audioContext.resume().catch(() => {});
   if (!isIosBrowser()) startRecognition(recording);
 }
-function stopRecording() { const recording = state.recording; if (!recording) return null; recording.active = false; setWaveformState("MIC OFF"); clearWaveform(); if (recording.audioFrame) window.cancelAnimationFrame(recording.audioFrame); if (recording.recognition) { try { recording.recognition.abort(); } catch { /* Optional browser API. */ } } if (recording.mediaRecorder?.state && recording.mediaRecorder.state !== "inactive") { try { recording.mediaRecorder.stop(); } catch { recording.resolveBlob(null); /* Optional browser API. */ } } else if (!recording.chunks.length) recording.resolveBlob(null); recording.stream?.getTracks().forEach((track) => track.stop()); if (recording.audioContext) recording.audioContext.close().catch(() => {}); state.recording = null; return recording; }
+function stopRecording() { const recording = state.recording; if (!recording) return null; recording.active = false; setWaveformState("MIC OFF"); clearWaveform(); if (recording.audioFrame) window.cancelAnimationFrame(recording.audioFrame); const recognition = recording.recognition; recording.recognition = null; if (recognition) { try { recognition.abort(); } catch { /* Optional browser API. */ } } if (recording.mediaRecorder?.state && recording.mediaRecorder.state !== "inactive") { try { recording.mediaRecorder.stop(); } catch { recording.resolveBlob(null); /* Optional browser API. */ } } else if (!recording.chunks.length) recording.resolveBlob(null); recording.stream?.getTracks().forEach((track) => track.stop()); if (recording.audioContext) recording.audioContext.close().catch(() => {}); state.recording = null; return recording; }
 function countWords(text) { return (text.match(/[A-Za-z0-9][A-Za-z0-9'’-]*/g) || []).length; }
 function countFillers(text) { return (text.match(/\b(?:um+|uh+|er+|like|you know|basically|actually|literally|sort of|kind of)\b/gi) || []).length; }
 function buildCoachingInsights({ transcript, words, fillers, pauses, wpm, speakingRatio, pitchRange, hasSignal }) {
@@ -194,30 +195,47 @@ function renderAnalysis(analysis) {
   metricEls.confidenceDetail.textContent = analysis.confidenceFeedback || (analysis.confidence ? (analysis.confidence >= 80 ? "Your pace supports a confident read." : "Try shorter pauses and a firmer first sentence.") : "Waiting for a usable speech signal.");
   metricEls.fillerDetail.textContent = analysis.fillerFeedback || (analysis.words ? `${analysis.fillers} filler word${analysis.fillers === 1 ? "" : "s"} across ${analysis.words} words.` : "No live transcript was captured.");
   metricEls.wpmDetail.textContent = analysis.paceFeedback || (analysis.wpm ? `${analysis.wpm} words per minute. Aim for 120–160 for an easy listen.` : "A transcript is needed to calculate pace.");
-  els.fillerCount.textContent = analysis.fillers; els.pauseCount.textContent = analysis.pauses; els.wordCount.textContent = analysis.words; els.pitchRange.textContent = analysis.pitchRange ? `${analysis.pitchRange} Hz` : "--"; els.analysisTranscript.textContent = analysis.transcript || analysis.error || "No transcript captured yet."; els.analysisSummary.textContent = analysis.summary || (analysis.error ? analysis.error : "Everything here was measured in this anonymous browser session.");
+  els.fillerCount.textContent = analysis.fillers; els.pauseCount.textContent = analysis.pauses; els.wordCount.textContent = analysis.words; els.pitchRange.textContent = analysis.pitchRange ? `${analysis.pitchRange} Hz` : "--"; els.analysisTranscript.textContent = transcriptBlockText(analysis); els.analysisSummary.textContent = analysis.summary || (analysis.error ? analysis.error : "Everything here was measured in this anonymous browser session.");
   renderInsightList(els.strengths, analysis.strengths, "No delivery strengths were detected yet."); renderInsightList(els.improvements, analysis.improvements, "Speak naturally for a full take to get a specific next move.");
 }
 async function processCompletedRecording(recording) {
-  let analysis = buildAnalysis(recording); renderAnalysis(analysis); els.analysisSummary.textContent = "Transcribing your session…";
+  if (!isCurrentRecording(state, recording)) return;
+  let analysis = { ...buildAnalysis(recording), transcribing: true };
+  if (!analysis.transcript) analysis.summary = "Transcribing your session…";
+  renderAnalysis(analysis); updateModalLabel();
   try {
     const blob = await recording?.blobReady;
+    if (!isCurrentRecording(state, recording)) return;
     if (!blob) throw new Error(recording?.error || "No recording was captured.");
     const transcriptResponse = await fetch("/api/transcribe", { method: "POST", headers: { "content-type": blob.type || "audio/webm" }, body: blob });
+    if (!isCurrentRecording(state, recording)) return;
     if (!transcriptResponse.ok) throw new Error("Transcription is unavailable right now.");
-    const transcription = await transcriptResponse.json(); recording.transcript = transcription.transcript || ""; recording.transcriptionProvider = transcription.provider || "server"; analysis = buildAnalysis(recording); renderAnalysis(analysis); els.analysisSummary.textContent = "Transcript ready. Gemini is reading the delivery now…";
+    const transcription = await transcriptResponse.json(); recording.transcript = transcription.transcript || ""; recording.transcriptionProvider = transcription.provider || "server";
+    if (!isCurrentRecording(state, recording)) return;
+    analysis = { ...buildAnalysis(recording), transcribing: true, summary: "Transcript ready. Gemini is reading the delivery now…" };
+    renderAnalysis(analysis);
     const aiResponse = await fetch("/api/analyze", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ topic: state.topic, transcript: analysis.transcript, metrics: { words: analysis.words, fillers: analysis.fillers, pauses: analysis.pauses, wpm: analysis.wpm, speakingRatio: analysis.speakingRatio, pitchAverage: analysis.pitchAverage, pitchRange: analysis.pitchRange, transcriptionProvider: recording.transcriptionProvider } }) });
+    if (!isCurrentRecording(state, recording)) return;
     if (!aiResponse.ok) throw new Error("AI analysis is unavailable right now.");
     const result = await aiResponse.json(); const ai = result.analysis;
-    if (ai) renderAnalysis({ ...analysis, summary: ai.summary, clarity: Number(ai.clarity?.score) || analysis.clarity, confidence: Number(ai.confidence?.score) || analysis.confidence, fillerControl: Number(ai.fillerControl?.score) || analysis.fillerControl, paceScore: Number(ai.pace?.score) || analysis.paceScore, wpm: Number(ai.pace?.wpm) || analysis.wpm, clarityFeedback: ai.clarity?.feedback, confidenceFeedback: ai.confidence?.feedback, fillerFeedback: ai.fillerControl?.feedback, paceFeedback: ai.pace?.feedback, strengths: Array.isArray(ai.strengths) && ai.strengths.length ? ai.strengths : analysis.strengths, improvements: Array.isArray(ai.improvements) && ai.improvements.length ? ai.improvements : analysis.improvements });
-  } catch (error) { const fallback = buildAnalysis({ ...recording, error: error.message || "Provider analysis unavailable. Local metrics are still shown." }); renderAnalysis({ ...fallback, summary: fallback.hasSignal ? "Your transcript is ready. Local delivery signals are shown while the deeper coaching pass is unavailable." : fallback.error }); }
+    if (ai) renderAnalysis({ ...analysis, transcribing: false, summary: ai.summary, clarity: Number(ai.clarity?.score) || analysis.clarity, confidence: Number(ai.confidence?.score) || analysis.confidence, fillerControl: Number(ai.fillerControl?.score) || analysis.fillerControl, paceScore: Number(ai.pace?.score) || analysis.paceScore, wpm: Number(ai.pace?.wpm) || analysis.wpm, clarityFeedback: ai.clarity?.feedback, confidenceFeedback: ai.confidence?.feedback, fillerFeedback: ai.fillerControl?.feedback, paceFeedback: ai.pace?.feedback, strengths: Array.isArray(ai.strengths) && ai.strengths.length ? ai.strengths : analysis.strengths, improvements: Array.isArray(ai.improvements) && ai.improvements.length ? ai.improvements : analysis.improvements });
+    else renderAnalysis({ ...analysis, transcribing: false });
+  } catch (error) {
+    if (!isCurrentRecording(state, recording)) return;
+    const fallback = buildAnalysis({ ...recording, error: error.message || "Provider analysis unavailable. Local metrics are still shown." });
+    renderAnalysis({ ...fallback, transcribing: false, summary: fallback.transcript ? "Your transcript is ready. Local delivery signals are shown while the deeper coaching pass is unavailable." : fallback.error });
+  } finally {
+    if (isCurrentRecording(state, recording) && state.analysis?.transcribing) renderAnalysis({ ...state.analysis, transcribing: false });
+    if (isCurrentRecording(state, recording)) updateModalLabel();
+  }
 }
-function openAnalysis() { if (!state.analysis) return; window.location.assign("/analysis"); }
+function openAnalysis() { if (!canNavigateToAnalysis(state.analysis)) return; window.location.assign("/analysis"); }
 function closeAnalysis() { els.analysisModal.hidden = true; }
 function renderNicheMenu() { els.nicheMenu.innerHTML = nicheOptions.map(([value, label, icon]) => `<button class="niche-option${value === state.niche ? " is-selected" : ""}" type="button" role="option" aria-selected="${value === state.niche}" data-niche="${value}"><span class="niche-option-icon" aria-hidden="true">${icon}</span><span>${label}</span></button>`).join(""); }
 function renderNiche() { const selected = nicheOptions.find(([value]) => value === state.niche) || nicheOptions[0]; els.nicheLabel.textContent = selected[1]; els.nicheIcon.textContent = selected[2]; els.nicheSelect.value = selected[0]; renderNicheMenu(); }
 function toggleNicheMenu(force) { const open = typeof force === "boolean" ? force : els.nicheMenu.hidden; els.nicheMenu.hidden = !open; els.nicheButton.setAttribute("aria-expanded", String(open)); }
 function updateTimerLabel() { if (state.phase === "research") els.timerLabel.textContent = "Pause research"; else if (state.phase === "speech") els.timerLabel.textContent = state.interval ? "Pause timer" : "Resume timer"; else if (state.phase === "complete") els.timerLabel.textContent = "Restart timer"; else els.timerLabel.textContent = state.mode === "deep-research" ? `Start ${state.settings.researchMinutes} min research` : `Start ${state.settings.speechMinutes} min timer`; }
-function updateModalLabel() { if (state.phase === "research") els.timerControl.textContent = state.interval ? "Pause research" : "Resume research"; else if (state.phase === "speech") els.timerControl.textContent = state.interval ? "Pause timer" : "Start speech"; else if (state.phase === "complete") els.timerControl.textContent = "Close timer"; else els.timerControl.textContent = "Start timer"; els.analysisButton.hidden = state.phase !== "complete"; }
+function updateModalLabel() { if (state.phase === "research") els.timerControl.textContent = state.interval ? "Pause research" : "Resume research"; else if (state.phase === "speech") els.timerControl.textContent = state.interval ? "Pause timer" : "Start speech"; else if (state.phase === "complete") els.timerControl.textContent = "Close timer"; else els.timerControl.textContent = "Start timer"; els.analysisButton.hidden = state.phase !== "complete"; const waiting = Boolean(state.analysis?.transcribing); els.analysisButton.disabled = waiting; els.analysisButton.textContent = waiting ? "Transcribing…" : "Check analysis"; }
 function setMode(mode) { state.mode = mode; els.modeOptions.forEach((button) => button.classList.toggle("is-active", button.dataset.mode === mode)); els.modeDescription.textContent = modeCopy[mode]; els.nicheControl.hidden = mode === "deep-research"; els.session.textContent = "READY"; resetTimer(); toggleNicheMenu(false); }
 
 async function spin() {
@@ -243,9 +261,9 @@ async function spin() {
 }
 function startTimer() { if (!state.topic || state.interval) return; state.phase = state.mode === "deep-research" ? "research" : "speech"; state.total = (state.phase === "research" ? state.settings.researchMinutes : state.settings.speechMinutes) * 60; state.remaining = state.total; els.timerTopic.textContent = state.topic; els.panel.hidden = false; els.phase.textContent = state.phase === "research" ? "Research timer" : "Speech timer"; els.status.textContent = state.phase === "research" ? "Build your angle. Then start speaking." : "The clock starts when you do."; setWaveformState(state.phase === "speech" ? "MIC STARTING" : "RESEARCH MODE"); renderTimer(); state.interval = window.setInterval(tick, 1000); if (state.phase === "speech") startRecording(); updateTimerLabel(); updateModalLabel(); chirp(760); }
 function tick() { state.remaining -= 1; if (state.phase === "speech" && state.recording) state.recording.timerSeconds += 1; renderTimer(); if (state.remaining <= 0) finishPhase(); }
-function finishPhase() { window.clearInterval(state.interval); state.interval = null; chirp(880, .22); if (state.phase === "research") { state.phase = "speech"; state.total = state.settings.speechMinutes * 60; state.remaining = state.total; els.phase.textContent = "Speech timer"; els.status.textContent = "Research complete. Tap Start speech when you are ready."; renderTimer(); updateTimerLabel(); updateModalLabel(); return; } const recording = stopRecording(); state.phase = "complete"; state.analysis = buildAnalysis(recording); renderAnalysis(state.analysis); processCompletedRecording(recording); els.status.textContent = "Mission complete. Nice work."; completionSound(); fireConfetti(); updateTimerLabel(); updateModalLabel(); }
+function finishPhase() { window.clearInterval(state.interval); state.interval = null; chirp(880, .22); if (state.phase === "research") { state.phase = "speech"; state.total = state.settings.speechMinutes * 60; state.remaining = state.total; els.phase.textContent = "Speech timer"; els.status.textContent = "Research complete. Tap Start speech when you are ready."; renderTimer(); updateTimerLabel(); updateModalLabel(); return; } const recording = stopRecording(); state.phase = "complete"; state.analysisToken = recording?.token || null; state.analysis = { ...buildAnalysis(recording), transcribing: true }; if (!state.analysis.transcript) state.analysis.summary = "Transcribing your session…"; renderAnalysis(state.analysis); processCompletedRecording(recording); els.status.textContent = "Mission complete. Nice work."; completionSound(); fireConfetti(); updateTimerLabel(); updateModalLabel(); }
 function renderTimer() { const ratio = state.total ? Math.max(0, state.remaining / state.total) : 1; els.display.textContent = formatTime(Math.max(0, state.remaining)); els.ringProgress.style.strokeDashoffset = `${603.19 * (1 - ratio)}`; }
-function resetTimer() { window.clearInterval(state.interval); state.interval = null; stopRecording(); state.phase = "idle"; state.remaining = 0; state.total = 0; state.analysis = null; els.panel.hidden = true; els.timer.disabled = !state.topic; updateTimerLabel(); updateModalLabel(); }
+function resetTimer() { window.clearInterval(state.interval); state.interval = null; stopRecording(); state.phase = "idle"; state.remaining = 0; state.total = 0; state.analysis = null; state.analysisToken = null; els.panel.hidden = true; els.timer.disabled = !state.topic; updateTimerLabel(); updateModalLabel(); }
 function closeTimerModal() { window.clearInterval(state.interval); state.interval = null; if (state.phase === "speech") stopRecording(); els.panel.hidden = true; updateTimerLabel(); updateModalLabel(); }
 function renderSettings() { els.speech.value = state.settings.speechMinutes; els.research.value = state.settings.researchMinutes; els.mute.checked = state.settings.muted; els.speechValue.textContent = `${els.speech.value} min`; els.researchValue.textContent = `${els.research.value} min`; }
 function openSettings() { renderSettings(); els.modal.hidden = false; els.speech.focus(); }
