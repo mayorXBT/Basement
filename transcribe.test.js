@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import app from "./server.js";
+
+delete process.env.DEEPGRAM_API_KEY;
+delete process.env.GROQ_API_KEY;
+const { default: app } = await import("./server.js");
 
 function listen(serverApp) {
   return new Promise((resolve) => {

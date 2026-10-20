@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import "./public/speech-metrics.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, ".env.local") });
@@ -13,6 +14,12 @@ const RATE_WINDOW_MS = 15 * 60 * 1000;
 const MAX_ANALYZE_TEXT = 12000;
 const MAX_TOPIC_TEXT = 240;
 const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
+const { countWords: countTranscriptWords, countFillers: countTranscriptFillers } = globalThis.BasementSpeechMetrics;
+
+function providerUrl(variableName, fallback, pathname) {
+  const base = String(process.env[variableName] || fallback).replace(/\/+$/, "");
+  return new URL(pathname.replace(/^\/+/, ""), `${base}/`).toString();
+}
 
 function createRateLimiter({ max, windowMs = RATE_WINDOW_MS, byEndpoint = false }) {
   const buckets = new Map();
@@ -237,10 +244,10 @@ async function generateWithGemini(category, niche, recentTopics = []) {
     if (!model || models.indexOf(model) !== index) continue;
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`,
+        providerUrl("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com", `v1beta/models/${model}:generateContent`),
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: { "content-type": "application/json", "x-goog-api-key": key },
           body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
           signal: AbortSignal.timeout(12000)
         }
@@ -259,8 +266,8 @@ async function generateWithGemini(category, niche, recentTopics = []) {
           catalogChecked = true;
           try {
             const catalogResponse = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`,
-              { signal: AbortSignal.timeout(8000) }
+              providerUrl("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com", "v1beta/models"),
+              { headers: { "x-goog-api-key": key }, signal: AbortSignal.timeout(8000) }
             );
             if (catalogResponse.ok) {
               const catalog = await catalogResponse.json();
@@ -296,14 +303,13 @@ function parseJsonObject(value) {
   try { return JSON.parse(cleaned); } catch { return null; }
 }
 
-function countTranscriptWords(text) { return (String(text || "").match(/[A-Za-z0-9][A-Za-z0-9'’-]*/g) || []).length; }
-function countTranscriptFillers(text) { return (String(text || "").match(/\b(?:um+|uh+|er+|like|you know|basically|actually|literally|sort of|kind of)\b/gi) || []).length; }
-
 async function transcribeWithDeepgram(buffer, contentType) {
   const key = process.env.DEEPGRAM_API_KEY;
   if (!key) return null;
   const query = new URLSearchParams({ model: process.env.DEEPGRAM_MODEL || "nova-3", smart_format: "true", punctuate: "true", utterances: "true", filler_words: "true", paragraphs: "true" });
-  const response = await fetch(`https://api.deepgram.com/v1/listen?${query}`, { method: "POST", headers: { Authorization: `Token ${key}`, "Content-Type": contentType || "audio/webm" }, body: buffer, signal: AbortSignal.timeout(30000) });
+  const url = new URL(providerUrl("DEEPGRAM_BASE_URL", "https://api.deepgram.com", "v1/listen"));
+  url.search = query;
+  const response = await fetch(url, { method: "POST", headers: { Authorization: `Token ${key}`, "Content-Type": contentType || "audio/webm" }, body: buffer, signal: AbortSignal.timeout(30000) });
   if (!response.ok) throw new Error(`Deepgram returned ${response.status}`);
   const data = await response.json(); const alternative = data?.results?.channels?.[0]?.alternatives?.[0];
   if (!alternative) return null;
@@ -335,7 +341,7 @@ async function transcribeWithGroq(buffer, contentType) {
   const key = process.env.GROQ_API_KEY;
   if (!key) return null;
   const form = new FormData(); form.append("file", new Blob([buffer], { type: contentType || "audio/webm" }), transcriptionFilename(contentType)); form.append("model", process.env.GROQ_TRANSCRIPTION_MODEL || "whisper-large-v3-turbo"); form.append("response_format", "verbose_json"); form.append("timestamp_granularities[]", "word");
-  const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", { method: "POST", headers: { Authorization: `Bearer ${key}` }, body: form, signal: AbortSignal.timeout(30000) });
+  const response = await fetch(providerUrl("GROQ_BASE_URL", "https://api.groq.com", "openai/v1/audio/transcriptions"), { method: "POST", headers: { Authorization: `Bearer ${key}` }, body: form, signal: AbortSignal.timeout(30000) });
   if (!response.ok) throw new Error(`Groq returned ${response.status}`);
   const data = await response.json(); const transcript = data?.text || "";
   return { transcript, words: data?.words || [], wordCount: countTranscriptWords(transcript), fillerCount: countTranscriptFillers(transcript), duration: Number(data?.duration || 0), provider: "groq" };
@@ -354,7 +360,7 @@ async function analyzeWithGemini(payload) {
   const models = [process.env.GEMINI_ANALYSIS_MODEL || process.env.GEMINI_MODEL || "gemini-3.6-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
   for (const model of models.filter((item, index, list) => item && list.indexOf(item) === index)) {
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] },), signal: AbortSignal.timeout(20000) });
+      const response = await fetch(providerUrl("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com", `v1beta/models/${model}:generateContent`), { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": key }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] },), signal: AbortSignal.timeout(20000) });
       if (!response.ok) { console.warn(`Gemini analysis ${model} returned ${response.status}`); continue; }
       const data = await response.json(); const text = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join(" "); const parsed = parseJsonObject(text);
       if (parsed?.clarity && parsed?.confidence && parsed?.fillerControl && parsed?.pace) return parsed;
