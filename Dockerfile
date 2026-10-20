@@ -7,7 +7,8 @@ WORKDIR /app
 COPY --chmod=0444 package.json package-lock.json ./
 RUN --mount=type=secret,id=proxy_ca \
     if [ -f /run/secrets/proxy_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/proxy_ca; fi; \
-    npm ci --omit=dev --strict-ssl=true && npm cache clean --force
+    npm ci --omit=dev --strict-ssl=true && npm cache clean --force && \
+    find /tmp -mindepth 1 -delete
 
 COPY --chmod=0444 server.js ./
 COPY --chmod=0555 public ./public
