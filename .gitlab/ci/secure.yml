@@ -12,3 +12,43 @@ gitlab-advanced-sast:
 secret_detection:
   stage: secure
   allow_failure: false
+
+secure:privacy-static:
+  stage: secure
+  image: node:22-slim
+  script:
+    - mkdir -p reports
+    - node scripts/privacy/static-rules.mjs . reports/privacy-static.json
+  artifacts:
+    when: always
+    paths:
+      - reports/privacy-static.json
+    expire_in: 14 days
+
+secure:privacy-canary:
+  stage: secure
+  image: docker:27-cli
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_BUILDKIT: "1"
+    DOCKER_TLS_CERTDIR: "/certs"
+    CANARY_IMAGE: basement-autopilot:canary
+    CANARY_PROVIDER_IMAGE: basement-fake-providers:canary
+  before_script:
+    - apk add --no-cache nodejs
+    - docker info
+  script:
+    - mkdir -p reports
+    - docker build --tag "$CANARY_IMAGE" .
+    - docker build --file scripts/privacy/Dockerfile.fake-providers --tag "$CANARY_PROVIDER_IMAGE" scripts/privacy
+    - node scripts/privacy/runtime-canary.mjs
+  artifacts:
+    when: always
+    reports:
+      junit: reports/privacy-canary-junit.xml
+    paths:
+      - reports/privacy-canary.json
+      - reports/privacy-canary-junit.xml
+    expire_in: 14 days
