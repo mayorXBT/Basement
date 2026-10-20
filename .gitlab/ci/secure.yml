@@ -1,0 +1,14 @@
+sast:
+  stage: secure
+
+semgrep-sast:
+  stage: secure
+  allow_failure: false
+
+gitlab-advanced-sast:
+  stage: secure
+  allow_failure: false
+
+secret_detection:
+  stage: secure
+  allow_failure: false

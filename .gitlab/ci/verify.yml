@@ -1,0 +1,30 @@
+.node-job:
+  image: node:22-slim
+  before_script:
+    - npm ci --ignore-scripts
+
+verify:unit:
+  extends: .node-job
+  stage: verify
+  script:
+    - mkdir -p reports
+    - node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=reports/junit.xml transcribe.test.js transcript-display.test.js test/*.test.js
+  artifacts:
+    when: always
+    reports:
+      junit: reports/junit.xml
+    paths:
+      - reports/junit.xml
+    expire_in: 14 days
+
+verify:syntax:
+  extends: .node-job
+  stage: verify
+  script:
+    - git ls-files -z '*.js' '*.mjs' | xargs -0 -n1 node --check
+
+verify:niche-parity:
+  extends: .node-job
+  stage: verify
+  script:
+    - node --test test/niche-parity.test.js

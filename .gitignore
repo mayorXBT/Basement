@@ -11,3 +11,4 @@ public/assets/*-source.png
 
 .vercel
 .worktrees/
+/reports/

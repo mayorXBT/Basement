@@ -1,0 +1,24 @@
+package:build:
+  stage: package
+  image: docker:27-cli
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_BUILDKIT: "1"
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker info
+    - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login --username "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  script:
+    - export IMAGE_REF="$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+    - docker build --pull --tag "$IMAGE_REF" .
+    - docker push "$IMAGE_REF"
+    - printf 'IMAGE_REF=%s\n' "$IMAGE_REF" > package.env
+    - docker image inspect --format='IMAGE_ID={{.Id}}' "$IMAGE_REF" >> package.env
+  artifacts:
+    reports:
+      dotenv: package.env
+    paths:
+      - package.env
+    expire_in: 14 days
