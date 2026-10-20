@@ -15,7 +15,9 @@ package:build:
     - docker build --pull --tag "$IMAGE_REF" .
     - docker push "$IMAGE_REF"
     - printf 'IMAGE_REF=%s\n' "$IMAGE_REF" > package.env
-    - docker image inspect --format='IMAGE_ID={{.Id}}' "$IMAGE_REF" >> package.env
+    - export IMAGE_DIGEST_REF="$(docker image inspect --format='{{index .RepoDigests 0}}' "$IMAGE_REF")"
+    - test -n "$IMAGE_DIGEST_REF"
+    - printf 'IMAGE_DIGEST_REF=%s\n' "$IMAGE_DIGEST_REF" >> package.env
   artifacts:
     reports:
       dotenv: package.env
