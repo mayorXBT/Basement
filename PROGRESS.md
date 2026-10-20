@@ -8,7 +8,7 @@ Mode: supervised | GitLab project: https://gitlab.com/mayorzeke/life-after-code 
   - Baseline command: `npm ci && npm test`
   - Result: PASS, 10 tests, 0 failures, 0 skipped, duration 20,289 ms (20 Oct 2026 WAT).
   - Observation: four transcription cases logged expected Deepgram/Groq `fetch failed` fallbacks; the suite still passed and the unavailable calls account for most of the runtime.
-- [ ] M1 GitLab home, verify, secure basics, package
+- [ ] M1 GitLab home, verify, secure basics, package (local implementation complete; real GitLab pipeline and registry image blocked by missing GitLab credentials)
 - [ ] M2 configure and deploy
 - [ ] M3 privacy guard and speech eval
 - [ ] M4 Duo flow, fixer, release, govern (first supervised run)
@@ -32,19 +32,19 @@ A claim with no opened, verified link is not used.
 | C9 receipt and verifiable ledger | | | M4 |
 | C10 Cloud Run via WIF | | | M2 |
 | C11 agent threads gate merge | | | M4 |
-| C12 before versus after | | | M1 |
-| C13 real findings fixed (F1, F2, F4) | | | M1-M3 |
+| C12 before versus after | softened | [Before commit](https://github.com/mayorXBT/Basement/commit/91810f090ebea09ff67a724e3bb6358bc68a2fb9), [CI source after](https://github.com/mayorXBT/Basement/blob/gitlab-autopilot/.gitlab-ci.yml). No GitLab pipeline link yet. | M1 |
+| C13 real findings fixed (F1, F2, F4) | softened | [F1 fix and F4 parity gate](https://github.com/mayorXBT/Basement/commit/a6f2c56). F2 remains unverified until Cloud Run. | M1-M3 |
 
 ## Findings log
 
 | ID | Status | MR | Evidence |
 |---|---|---|---|
-| F1 Gemini key in URL query strings | Open | | `server.js` current implementation; planned M1 regression test and fix. |
+| F1 Gemini key in URL query strings | Fixed | | [Commit `a6f2c56`](https://github.com/mayorXBT/Basement/commit/a6f2c56): behavior test proves generation, catalog, and analysis calls use `x-goog-api-key` with an empty query string. |
 | F2 limiter uses socket address behind proxies | Unverified | | Requires Cloud Run evidence; planned M2 `TRUST_PROXY=1` check. |
 | F3 unused `/api/auth` limiter | Noted, no change | | PRD section 5.1. |
-| F4 niche list duplicated in three files | Open | | Planned M1 parity test; no demo niche added by hand. |
+| F4 niche list duplicated in three files | Guarded | | [Commit `a6f2c56`](https://github.com/mayorXBT/Basement/commit/a6f2c56): parity test compares server, client, and HTML values; no demo niche added by hand. |
 | F5 filler regex over-counts ordinary words | Tracked, not a gate | | Planned eval precision metric. |
-| F6 filler and word counters duplicated | Open | | Planned M1 extraction to `public/speech-metrics.js`. |
+| F6 filler and word counters duplicated | Fixed | | [Commit `a6f2c56`](https://github.com/mayorXBT/Basement/commit/a6f2c56): client and server use `public/speech-metrics.js`. |
 | F7 unreferenced `orig-index.js` | Intentionally untouched | | Owner instructed that it remain unchanged. |
 
 ## Decisions and deviations from PRD
@@ -54,6 +54,9 @@ A claim with no opened, verified link is not used.
 - 20 Oct 2026: Installed the Pragmatic Programmer skill at `/home/agent/.codex/skills/pragmatic-programmer` only; upstream commit `e5d025b` still has no licence file, so none of its files may enter this repository.
 - 20 Oct 2026: Reused the existing remote `gitlab-autopilot` branch because evidence shows it is exactly `master` commit `91810f0` plus the PRD commit; creating a second branch would discard the provided source-of-truth file.
 - 20 Oct 2026: Repaired this clone's narrow Git fetch refspec to track all GitHub branches because the requested remote branch existed but was not being fetched.
+- 20 Oct 2026: Kept M1 open after completing its local code because a green GitLab pipeline, registry image, and MIT About badge are required exit evidence and cannot be replaced by local output.
+- 20 Oct 2026: Updated only lockfile-compatible Express 4 dependencies after the first image build exposed one critical and three moderate advisories; the same build now reports zero vulnerabilities without a framework major upgrade.
+- 20 Oct 2026: Used the current GitLab Dependency Scanning v2 template inputs for `stage: secure` and blocking failures after inspecting the live upstream template rather than relying on the PRD sketch.
 
 ## Verification log
 
@@ -61,10 +64,16 @@ A claim with no opened, verified link is not used.
 |---|---|---|---|
 | Baseline | `npm ci && npm test` | PASS: 10/10 tests, 0 failures, 20,289 ms | Local run on commit `ed36b60`; no external link. |
 | M0 | `npm test` | PASS: 10/10 tests, 0 failures, 20,299 ms | Local run after M0 guardrail files; external pipeline not yet available. |
+| M1 app | `npm ci --ignore-scripts && npm test` | PASS: 15/15 tests, 0 failures, 672 ms | Local run; [implementation commit](https://github.com/mayorXBT/Basement/commit/a6f2c56). |
+| M1 syntax | `git ls-files -z '*.js' '*.mjs' \| xargs -0 -n1 node --check` | PASS | Local run on `d3f02df`. |
+| M1 dependencies | `npm audit --omit=dev` | PASS: 0 vulnerabilities | Local run after patched transitive update. |
+| M1 image | Docker build plus `/api/health`, UID, `.env`, and asset probes | PASS: exact schema, UID 1000, no `.env`, metrics served | Local image `basement-autopilot:m1`; [Docker commit](https://github.com/mayorXBT/Basement/commit/dcd33d4). |
+| M1 CI config | YAML parse plus exact verify commands | PASS locally; GitLab lint/pipeline not run | Blocked by missing GitLab access. |
 
 ## Blocked / needs Mayor
 
 - GitLab contributor onboarding and Duo Agent Platform availability must be confirmed in the selected GitLab namespace before M4 can be proven.
+- `GITLAB_TOKEN` is absent from this execution environment. The `gitlab` remote is configured, but authenticated read/push, MR creation, CI lint, pipelines, registry evidence, and GitLab master merges are blocked.
 - Replace the GitLab remote when the hackathon-provisioned project URL is supplied.
 - Cloud Run, Artifact Registry, Secret Manager, API enablement, and billing remain approval-gated. M2 will supply exact commands and cost posture but will not create resources.
 - Public visibility changes, demo publication, YouTube upload, and Devpost submission require explicit owner action or approval.
