@@ -9,6 +9,7 @@ dotenv.config({ path: path.join(__dirname, ".env.local") });
 dotenv.config();
 const app = express();
 app.disable("x-powered-by");
+if (process.env.TRUST_PROXY === "1") app.set("trust proxy", 1);
 const port = Number(process.env.PORT || 3000);
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 const MAX_ANALYZE_TEXT = 12000;
@@ -29,7 +30,7 @@ function createRateLimiter({ max, windowMs = RATE_WINDOW_MS, byEndpoint = false 
   }, windowMs);
   cleanup.unref?.();
   return (req, res, next) => {
-    const ip = req.socket.remoteAddress || "unknown";
+    const ip = req.ip || req.socket.remoteAddress || "unknown";
     const key = byEndpoint ? `${ip}:${req.baseUrl || ""}${req.path || ""}` : ip;
     const now = Date.now();
     let bucket = buckets.get(key);
