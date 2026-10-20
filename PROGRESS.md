@@ -4,7 +4,7 @@ Mode: supervised | GitLab project: https://gitlab.com/mayorzeke/life-after-code 
 
 ## Milestones
 
-- [ ] M0 setup and baseline
+- [x] M0 setup and baseline
   - Baseline command: `npm ci && npm test`
   - Result: PASS, 10 tests, 0 failures, 0 skipped, duration 20,289 ms (20 Oct 2026 WAT).
   - Observation: four transcription cases logged expected Deepgram/Groq `fetch failed` fallbacks; the suite still passed and the unavailable calls account for most of the runtime.
@@ -60,6 +60,7 @@ A claim with no opened, verified link is not used.
 | Milestone | Command | Result | Evidence |
 |---|---|---|---|
 | Baseline | `npm ci && npm test` | PASS: 10/10 tests, 0 failures, 20,289 ms | Local run on commit `ed36b60`; no external link. |
+| M0 | `npm test` | PASS: 10/10 tests, 0 failures, 20,299 ms | Local run after M0 guardrail files; external pipeline not yet available. |
 
 ## Blocked / needs Mayor
 
