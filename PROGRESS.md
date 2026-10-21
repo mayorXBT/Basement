@@ -13,7 +13,7 @@ Mode: supervised | GitLab project: https://gitlab.com/mayorzeke/life-after-code 
 - [ ] M3 privacy guard and speech eval (local must-have and should-have implementation complete; GitLab jobs, MR artifacts, and Guard threads remain blocked by missing GitLab credentials)
 - [ ] M4 Duo flow, fixer, release, govern (local factory complete; AI Catalog validation and the first supervised GitLab run are blocked by missing GitLab access)
 - [ ] M5 hands-off, monitor, dry runs, demo recorded (local policy, synthetic recovery, and nine-stage evidence map complete; real schedules, fire drill, three dry runs, and recording are blocked by GitLab/GCP access)
-- [ ] M6 README, Devpost, video, submitted
+- [ ] M6 README, Devpost, video, submitted (README, honest Devpost draft, and evidence-dependent demo script complete; recording, upload, publication, and submission remain owner-gated)
 
 ## Claim evidence
 
@@ -78,6 +78,10 @@ A claim with no opened, verified link is not used.
 - 21 Oct 2026: The six-hour transcription monitor reports `skipped-no-approved-clip` until an owner-approved three-second clip exists. A missing recording cannot be converted into a passing audio claim.
 - 21 Oct 2026: Production recovery is deterministic before it is agentic: two failed synthetic attempts invoke only `rollback.sh` against the recorded `last-good` tag, then the incident issue is created, and the optional agent can add only a bounded narrative.
 - 21 Oct 2026: Keep M5 open and C1/C7/C8 softened because local tests and source links do not prove GitLab hands-off execution, nine run stages, or a Cloud Run rollback. The GitLab push still fails before authentication with `could not read Username` because no token is available.
+- 21 Oct 2026: Keep Vercel as the before-state and non-GCP fallback instead of adding Render. This follows the owner's instruction not to touch `api/index.js`, `vercel.json`, or `orig-index.js` and avoids an unnecessary second deployment stack.
+- 21 Oct 2026: The submission draft uses Supervised wording and “nine stages implemented” until C1 and C7 have opened GitLab run links. The demo script includes a shorter local-evidence cut so missing proof is removed rather than staged.
+- 21 Oct 2026: Keep M6 open because writing submission materials is not recording or publishing a video and is not a Devpost submission. External publication remains an explicit owner approval boundary.
+- 21 Oct 2026: A direct check of `https://basement.cefo.dev` from this environment was inconclusive because the managed network proxy rejected the CONNECT tunnel with HTTP 403; the existing Vercel URL was not counted as newly verified evidence.
 
 ## Verification log
 
@@ -109,6 +113,7 @@ A claim with no opened, verified link is not used.
 | M4 full suite | `npm test`; Layer A; keyless Layer B; privacy static; tracked JS/MJS syntax; CI/flow YAML parse; `npm audit --omit=dev` | PASS: 50/50 tests, 0 failures, 2,012 ms; evals 6/6; 0 vulnerabilities | Local run on `00dc2a6`; no GitLab pipeline URL. |
 | M5 monitor and policy | Focused monitor/smoke/policy tests; CI YAML parse; staged secret-pattern scans | PASS: 8/8 focused tests; nine CI YAML files parsed; four staged scans clean | [Monitor runtime](https://github.com/mayorXBT/Basement/commit/52532a7), [policy](https://github.com/mayorXBT/Basement/commit/49d110d), [CI wiring](https://github.com/mayorXBT/Basement/commit/58fa1fe). No scheduled pipeline URL. |
 | M5 full suite | `npm test`; Layer A; keyless Layer B; privacy static; tracked JS/MJS syntax; CI/flow YAML parse; `npm audit --omit=dev` | PASS: 57/57 tests, 0 failures, 2,113 ms; evals 6/6; 0 vulnerabilities | Local run on `818bdc3`; no GitLab pipeline URL. |
+| M6 documentation and full suite | `npm test`; Layer A; keyless Layer B; privacy static; tracked JS/MJS syntax; CI/flow YAML parse; relative Markdown link check; `npm audit --omit=dev` | PASS: 57/57 tests, 0 failures, 1,992 ms; evals 6/6; links valid; 0 vulnerabilities | Local run after `7afc92d`; README, Devpost draft, and demo plan only, with no publication URL. |
 
 ## Blocked / needs Mayor
 
@@ -124,3 +129,4 @@ A claim with no opened, verified link is not used.
 - Cloud Run, Artifact Registry, Secret Manager, API enablement, and billing remain approval-gated. M2 will supply exact commands and cost posture but will not create resources.
 - M2's exact owner-run commands and billable-resource list are in `deploy/cloudrun/README.md`; until they are approved and run, C10, live smoke, environment history, and rollback evidence remain unproven.
 - Public visibility changes, demo publication, YouTube upload, and Devpost submission require explicit owner action or approval.
+- The final recording must wait for the owner-approved speech clip and the evidence level the owner chooses to present. `docs/DEMO_SCRIPT.md` provides both the full proof-dependent cut and an honest local-evidence cut.

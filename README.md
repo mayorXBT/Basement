@@ -69,7 +69,7 @@ The current local baseline passes 6/6 fixtures with `gemini-3.1-flash-lite`. The
 
 ## Try the Autopilot
 
-In an enabled GitLab project, create an issue from the `autopilot` template, describe one small outcome, and keep the `autopilot` label. Triage should post bounded acceptance criteria and Builder should open the linked MR. The demo-only “Add a Job interview niche” feature is intentionally absent from this branch so the flow, not a person, can create it.
+In an enabled GitLab project, create an issue from the [`autopilot` template](.gitlab/issue_templates/autopilot.md), describe one small outcome, and keep the `autopilot` label. Triage should post bounded acceptance criteria and Builder should open the linked MR. The demo-only “Add a Job interview niche” feature is intentionally absent from this branch so the flow, not a person, can create it.
 
 For judges: check `PROGRESS.md` first. `AUTOPILOT_PAUSED=1` may intentionally disable agent repair and production changes during judging, and the current temporary GitLab project has not yet been authenticated from this build environment.
 
