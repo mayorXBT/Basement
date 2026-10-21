@@ -14,9 +14,9 @@ function requestHeaders() {
   return headers;
 }
 
-export async function smoke(baseUrl) {
+export async function smoke(baseUrl, { fetchImpl = fetch } = {}) {
   const root = new URL(baseUrl);
-  const healthResponse = await fetch(new URL("/api/health", root), { headers: requestHeaders(), signal: AbortSignal.timeout(15000) });
+  const healthResponse = await fetchImpl(new URL("/api/health", root), { headers: requestHeaders(), signal: AbortSignal.timeout(15000) });
   assert.equal(healthResponse.status, 200, "health endpoint must return 200");
   const health = await healthResponse.json();
   assert.deepEqual(Object.keys(health).sort(), ["deepgramConfigured", "geminiConfigured", "groqConfigured", "ok"]);
@@ -29,7 +29,7 @@ export async function smoke(baseUrl) {
     assert.equal(health.groqConfigured, true, "Groq secret is not configured");
   }
 
-  const pageResponse = await fetch(root, { headers: requestHeaders(), signal: AbortSignal.timeout(15000) });
+  const pageResponse = await fetchImpl(root, { headers: requestHeaders(), signal: AbortSignal.timeout(15000) });
   assert.equal(pageResponse.status, 200, "home page must return 200");
   for (const [name, value] of Object.entries(expectedHeaders)) {
     assert.equal(pageResponse.headers.get(name), value, `${name} changed`);

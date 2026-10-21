@@ -88,6 +88,14 @@ export class GitLabClient {
     return this.request(this.projectPath(`/issues/${encodeURIComponent(iid)}`), { method: "PUT", body });
   }
 
+  listIssues(search) {
+    return this.request(this.projectPath(`/issues?scope=all&state=all&per_page=100&search=${encodeURIComponent(search)}`));
+  }
+
+  createIssue(body) {
+    return this.request(this.projectPath("/issues"), { method: "POST", body });
+  }
+
   replyToMergeRequestDiscussion(iid, discussionId, body) {
     return this.request(this.projectPath(`/merge_requests/${encodeURIComponent(iid)}/discussions/${encodeURIComponent(discussionId)}/notes`), { method: "POST", body: { body } });
   }
