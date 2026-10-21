@@ -60,6 +60,10 @@ export class GitLabClient {
     return this.request(this.projectPath(`/merge_requests/${encodeURIComponent(iid)}`), { method: "PUT", body });
   }
 
+  armMergeRequest(iid, sha) {
+    return this.request(this.projectPath(`/merge_requests/${encodeURIComponent(iid)}/merge`), { method: "PUT", body: { auto_merge: true, should_remove_source_branch: true, sha } });
+  }
+
   listPipelineJobs(pipelineId) {
     return this.request(this.projectPath(`/pipelines/${encodeURIComponent(pipelineId)}/jobs?per_page=100&include_retried=true`));
   }
@@ -74,6 +78,10 @@ export class GitLabClient {
 
   createIssueNote(iid, body) {
     return this.request(this.projectPath(`/issues/${encodeURIComponent(iid)}/notes`), { method: "POST", body: { body } });
+  }
+
+  listIssueNotes(iid) {
+    return this.request(this.projectPath(`/issues/${encodeURIComponent(iid)}/notes?per_page=100`));
   }
 
   updateIssue(iid, body) {
