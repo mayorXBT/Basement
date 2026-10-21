@@ -28,3 +28,47 @@ verify:niche-parity:
   stage: verify
   script:
     - node --test test/niche-parity.test.js
+
+verify:speech-eval-a:
+  extends: .node-job
+  stage: verify
+  script:
+    - node scripts/eval/run-eval.mjs a
+  artifacts:
+    when: always
+    reports:
+      junit: reports/eval-layer-a-junit.xml
+    paths:
+      - reports/eval-layer-a.json
+      - reports/eval-layer-a-junit.xml
+    expire_in: 14 days
+
+verify:speech-eval-b:
+  extends: .node-job
+  stage: verify
+  variables:
+    EVAL_GEMINI_MODEL: gemini-3.1-flash-lite
+  script:
+    - node scripts/eval/run-eval.mjs b
+    - node scripts/eval/report.mjs reports/eval-report.json reports/eval-report.md --post
+  artifacts:
+    when: always
+    reports:
+      junit: reports/eval-layer-b-junit.xml
+    paths:
+      - reports/eval-report.json
+      - reports/eval-report.md
+      - reports/eval-next-baseline.json
+      - reports/eval-layer-b-junit.xml
+    expire_in: 14 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "nightly-eval"'
+      variables:
+        EVAL_REFRESH: "1"
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - server.js
+        - public/speech-metrics.js
+        - eval/**/*
+        - scripts/eval/**/*
+        - .gitlab/ci/verify.yml
