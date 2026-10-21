@@ -9,6 +9,7 @@ include:
   - local: .gitlab/ci/secure.yml
   - local: .gitlab/ci/package.yml
   - local: .gitlab/ci/deploy.yml
+  - local: .gitlab/ci/agents.yml
 
 stages:
   - .pre

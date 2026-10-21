@@ -1,0 +1,19 @@
+fix:autopilot:
+  stage: .post
+  image: node:22-slim
+  variables:
+    GIT_DEPTH: "0"
+  before_script:
+    - npm ci --ignore-scripts
+  script:
+    - mkdir -p reports
+    - node scripts/agents/fixer.mjs
+  artifacts:
+    when: always
+    paths:
+      - reports/fixer.json
+      - reports/fixer-agent.md
+    expire_in: 14 days
+  when: on_failure
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $AUTOPILOT_PAUSED != "1"'
