@@ -29,6 +29,12 @@ verify:niche-parity:
   script:
     - node --test test/niche-parity.test.js
 
+verify:flow-parity:
+  extends: .node-job
+  stage: verify
+  script:
+    - node --test test/flow-parity.test.js
+
 verify:speech-eval-a:
   extends: .node-job
   stage: verify
