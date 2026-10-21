@@ -4,10 +4,11 @@ function required(value, name) {
 }
 
 export class GitLabClient {
-  constructor({ apiUrl = process.env.CI_API_V4_URL, projectId = process.env.CI_PROJECT_ID, token = process.env.AUTOPILOT_BOT_TOKEN || process.env.GITLAB_TOKEN } = {}) {
+  constructor({ apiUrl = process.env.CI_API_V4_URL, projectId = process.env.CI_PROJECT_ID, token = process.env.AUTOPILOT_BOT_TOKEN || process.env.GITLAB_TOKEN || process.env.CI_JOB_TOKEN } = {}) {
     this.apiUrl = apiUrl?.replace(/\/$/, "");
     this.projectId = projectId;
     this.token = token;
+    this.jobToken = token && token === process.env.CI_JOB_TOKEN && !process.env.AUTOPILOT_BOT_TOKEN && !process.env.GITLAB_TOKEN;
   }
 
   get configured() {
@@ -20,7 +21,7 @@ export class GitLabClient {
     const response = await fetch(`${apiUrl}${pathname}`, {
       method,
       headers: {
-        "private-token": token,
+        [this.jobToken ? "job-token" : "private-token"]: token,
         ...(body === undefined ? {} : { "content-type": "application/json" })
       },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -65,6 +66,18 @@ export class GitLabClient {
 
   getJobTrace(jobId) {
     return this.request(this.projectPath(`/jobs/${encodeURIComponent(jobId)}/trace`), { responseType: "text" });
+  }
+
+  listCommitMergeRequests(sha) {
+    return this.request(this.projectPath(`/repository/commits/${encodeURIComponent(sha)}/merge_requests`));
+  }
+
+  createIssueNote(iid, body) {
+    return this.request(this.projectPath(`/issues/${encodeURIComponent(iid)}/notes`), { method: "POST", body: { body } });
+  }
+
+  updateIssue(iid, body) {
+    return this.request(this.projectPath(`/issues/${encodeURIComponent(iid)}`), { method: "PUT", body });
   }
 
   replyToMergeRequestDiscussion(iid, discussionId, body) {
