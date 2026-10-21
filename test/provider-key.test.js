@@ -4,6 +4,7 @@ import test from "node:test";
 const originalFetch = globalThis.fetch;
 const originalKey = process.env.GEMINI_API_KEY;
 const originalBaseUrl = process.env.GEMINI_BASE_URL;
+const originalGenerationConfig = process.env.ANALYSIS_GENERATION_CONFIG;
 const requests = [];
 let generationCalls = 0;
 
@@ -14,7 +15,7 @@ globalThis.fetch = async (input, init = {}) => {
   const url = new URL(input);
   if (url.hostname === "127.0.0.1") return originalFetch(input, init);
 
-  requests.push({ url, headers: new Headers(init.headers) });
+  requests.push({ url, headers: new Headers(init.headers), body: init.body ? JSON.parse(init.body) : null });
   if (url.pathname.endsWith("/v1beta/models")) {
     return Response.json({ models: [{ name: "models/gemini-test", supportedGenerationMethods: ["generateContent"] }] });
   }
@@ -49,6 +50,7 @@ test("Gemini calls keep the key in a header and honor the base URL", async () =>
     });
     assert.equal(spin.status, 200);
 
+    process.env.ANALYSIS_GENERATION_CONFIG = "deterministic";
     const analyze = await originalFetch(`http://127.0.0.1:${port}/api/analyze`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -63,10 +65,13 @@ test("Gemini calls keep the key in a header and honor the base URL", async () =>
       assert.equal(request.url.search, "");
       assert.equal(request.headers.get("x-goog-api-key"), "provider-test-key");
     }
+    const analysisRequest = requests.find((request) => request.body?.contents?.[0]?.parts?.[0]?.text?.includes("public-speaking coach"));
+    assert.deepEqual(analysisRequest.body.generationConfig, { temperature: 0, responseMimeType: "application/json", seed: 1 });
   } finally {
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     globalThis.fetch = originalFetch;
     if (originalKey === undefined) delete process.env.GEMINI_API_KEY; else process.env.GEMINI_API_KEY = originalKey;
     if (originalBaseUrl === undefined) delete process.env.GEMINI_BASE_URL; else process.env.GEMINI_BASE_URL = originalBaseUrl;
+    if (originalGenerationConfig === undefined) delete process.env.ANALYSIS_GENERATION_CONFIG; else process.env.ANALYSIS_GENERATION_CONFIG = originalGenerationConfig;
   }
 });

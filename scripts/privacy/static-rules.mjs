@@ -107,8 +107,9 @@ function scanEgress(relative, source, findings) {
     const argument = match[1].trim();
     const host = argument.match(/https?:\/\/([^/"'`]+)/)?.[1];
     const baseVariable = argument.match(/providerUrl\(\s*["']([A-Z_]+)["']/)?.[1];
-    const isDeepgramUrl = argument === "url" && /const\s+url\s*=\s*new URL\(providerUrl\(\s*["']DEEPGRAM_BASE_URL["']/.test(source);
-    if ((host && allowedHosts.has(host)) || (baseVariable && allowedVariables.has(baseVariable)) || isDeepgramUrl) continue;
+    const identifier = argument.match(/^([A-Za-z_$][\w$]*)$/)?.[1];
+    const declaredProviderUrl = identifier && allowedVariables.size > 0 && new RegExp(`const\\s+${identifier}\\s*=\\s*(?:new URL\\()?providerUrl\\(\\s*["'](?:${[...allowedVariables].join("|")})["']`).test(source);
+    if ((host && allowedHosts.has(host)) || (baseVariable && allowedVariables.has(baseVariable)) || declaredProviderUrl) continue;
     addFinding(findings, "PG-EGRESS-01", "P5", relative, source, match.index, "A fetch target is not tied to an approved provider host or base URL.");
   }
 }
