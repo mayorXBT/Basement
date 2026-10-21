@@ -1,4 +1,5 @@
 package:build:
+  extends: .skip-monitor-schedule
   stage: package
   image: docker:27-cli
   services:

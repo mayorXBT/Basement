@@ -10,6 +10,8 @@ release:arm-automerge:
       - reports/arm-automerge.json
     expire_in: 14 days
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $AUTOPILOT_PAUSED != "1"'
 
 release:version:
@@ -28,6 +30,8 @@ release:version:
       - reports/release-version.json
     expire_in: 14 days
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 release:notes:
@@ -51,6 +55,8 @@ release:notes:
       - reports/release-notes.json
     expire_in: 14 days
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 release:publish:
@@ -98,4 +104,6 @@ release:publish:
         - name: Coaching evaluation
           url: '$CI_JOB_URL/artifacts/file/release-assets/eval-report.json'
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

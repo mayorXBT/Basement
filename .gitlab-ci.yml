@@ -12,6 +12,7 @@ include:
   - local: .gitlab/ci/agents.yml
   - local: .gitlab/ci/release.yml
   - local: .gitlab/ci/govern.yml
+  - local: .gitlab/ci/monitor.yml
 
 stages:
   - .pre
@@ -35,6 +36,12 @@ workflow:
 
 default:
   interruptible: true
+
+.skip-monitor-schedule:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
+    - when: on_success
 
 variables:
   AUTOPILOT_MODE: supervised

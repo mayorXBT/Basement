@@ -48,6 +48,8 @@ package:artifact-registry:
       - artifact-registry.env
     expire_in: 14 days
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: manual
       allow_failure: true
@@ -73,6 +75,8 @@ deploy:review:
     reports:
       dotenv: deploy.env
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: manual
       allow_failure: true
@@ -87,6 +91,8 @@ smoke:review:
     - export CLOUD_RUN_ID_TOKEN="$(gcloud auth print-identity-token --audiences="$DEPLOY_URL")"
     - node scripts/monitor/smoke.mjs "$DEPLOY_URL"
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: manual
       allow_failure: true
@@ -108,7 +114,10 @@ deploy:staging:
     reports:
       dotenv: deploy.env
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $AUTOPILOT_MODE == "handsoff" && $GCP_DEPLOY_APPROVED == "1" && $AUTOPILOT_PAUSED != "1"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $AUTOPILOT_PAUSED != "1"'
       when: manual
 
 smoke:staging:
@@ -129,13 +138,17 @@ smoke:staging:
     reports:
       dotenv: smoke.env
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $AUTOPILOT_PAUSED != "1"'
 
 deploy:prod:
   extends: .gcp-deploy
   stage: production
   needs:
     - job: smoke:staging
+      artifacts: true
+    - job: govern:policy
       artifacts: true
   environment:
     name: production
@@ -148,6 +161,9 @@ deploy:prod:
     reports:
       dotenv: deploy.env
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $AUTOPILOT_MODE == "handsoff" && $GCP_DEPLOY_APPROVED == "1" && $AUTOPILOT_PAUSED != "1"'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $AUTOPILOT_PAUSED != "1"'
       when: manual
 
@@ -165,4 +181,6 @@ smoke:candidate:
     - node scripts/monitor/smoke.mjs "$DEPLOY_URL"
     - scripts/deploy/promote.sh "$CLOUD_RUN_SERVICE_PROD" "$DEPLOY_TAG"
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $AUTOPILOT_PAUSED != "1"'

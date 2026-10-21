@@ -1,19 +1,27 @@
 sast:
   stage: secure
+  extends: .skip-monitor-schedule
 
 semgrep-sast:
   stage: secure
   allow_failure: false
+  extends: .skip-monitor-schedule
 
 gitlab-advanced-sast:
   stage: secure
   allow_failure: false
+  extends: .skip-monitor-schedule
 
 secret_detection:
   stage: secure
   allow_failure: false
+  extends: .skip-monitor-schedule
+
+dependency-scanning:
+  extends: .skip-monitor-schedule
 
 secure:privacy-static:
+  extends: .skip-monitor-schedule
   stage: secure
   image: node:22-slim
   script:
@@ -26,6 +34,7 @@ secure:privacy-static:
     expire_in: 14 days
 
 secure:privacy-canary:
+  extends: .skip-monitor-schedule
   stage: secure
   image: docker:27-cli
   services:

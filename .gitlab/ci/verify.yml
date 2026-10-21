@@ -4,7 +4,7 @@
     - npm ci --ignore-scripts
 
 verify:unit:
-  extends: .node-job
+  extends: [.node-job, .skip-monitor-schedule]
   stage: verify
   script:
     - mkdir -p reports
@@ -18,19 +18,19 @@ verify:unit:
     expire_in: 14 days
 
 verify:syntax:
-  extends: .node-job
+  extends: [.node-job, .skip-monitor-schedule]
   stage: verify
   script:
     - git ls-files -z '*.js' '*.mjs' | xargs -0 -n1 node --check
 
 verify:niche-parity:
-  extends: .node-job
+  extends: [.node-job, .skip-monitor-schedule]
   stage: verify
   script:
     - node --test test/niche-parity.test.js
 
 verify:flow-parity:
-  extends: .node-job
+  extends: [.node-job, .skip-monitor-schedule]
   stage: verify
   script:
     - node --test test/flow-parity.test.js
@@ -52,7 +52,7 @@ verify:guard-paths:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 verify:speech-eval-a:
-  extends: .node-job
+  extends: [.node-job, .skip-monitor-schedule]
   stage: verify
   script:
     - node scripts/eval/run-eval.mjs a
@@ -84,6 +84,8 @@ verify:speech-eval-b:
       - reports/eval-layer-b-junit.xml
     expire_in: 14 days
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "nightly-eval"'
       variables:
         EVAL_REFRESH: "1"

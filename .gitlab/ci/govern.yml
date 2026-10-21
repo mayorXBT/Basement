@@ -1,3 +1,24 @@
+govern:policy:
+  extends: .node-job
+  stage: production
+  needs:
+    - job: smoke:staging
+      artifacts: true
+    - job: release:publish
+      artifacts: true
+  script:
+    - mkdir -p reports
+    - node scripts/evidence/policy.mjs reports/govern-policy.json
+  artifacts:
+    when: always
+    paths:
+      - reports/govern-policy.json
+    expire_in: 1 year
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
 govern:evidence:
   extends: .node-job
   stage: govern
@@ -29,4 +50,6 @@ govern:evidence:
       - reports/post-evidence.json
     expire_in: 1 year
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
