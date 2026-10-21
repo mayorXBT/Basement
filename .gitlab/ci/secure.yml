@@ -52,3 +52,34 @@ secure:privacy-canary:
       - reports/privacy-canary.json
       - reports/privacy-canary-junit.xml
     expire_in: 14 days
+
+secure:privacy-guard:
+  stage: secure
+  image: node:22-slim
+  when: always
+  needs:
+    - job: secure:privacy-static
+      artifacts: true
+    - job: secure:privacy-canary
+      artifacts: true
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - node scripts/agents/privacy-guard.mjs prepare "$CI_MERGE_REQUEST_DIFF_BASE_SHA" reports/privacy-guard-context.json
+    - node scripts/agents/run-agent.mjs --agent privacy-guard --context reports/privacy-guard-context.json --output reports/privacy-guard-agent.md --result reports/privacy-guard-agent.json
+    - node scripts/agents/privacy-guard.mjs apply reports/privacy-guard-context.json reports/privacy-guard-agent.json reports/privacy-guard.json
+  artifacts:
+    when: always
+    paths:
+      - reports/privacy-guard-agent.md
+      - reports/privacy-guard.json
+    expire_in: 14 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - server.js
+        - api/**/*
+        - public/**/*
+        - package.json
+        - package-lock.json
+        - Dockerfile
