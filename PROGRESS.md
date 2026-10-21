@@ -82,6 +82,7 @@ A claim with no opened, verified link is not used.
 - 21 Oct 2026: The submission draft uses Supervised wording and “nine stages implemented” until C1 and C7 have opened GitLab run links. The demo script includes a shorter local-evidence cut so missing proof is removed rather than staged.
 - 21 Oct 2026: Keep M6 open because writing submission materials is not recording or publishing a video and is not a Devpost submission. External publication remains an explicit owner approval boundary.
 - 21 Oct 2026: A direct check of `https://basement.cefo.dev` from this environment was inconclusive because the managed network proxy rejected the CONNECT tunnel with HTTP 403; the existing Vercel URL was not counted as newly verified evidence.
+- 21 Oct 2026: Current GitLab CI documentation requires `glab` on `PATH` for jobs using the `release:` keyword. `release:publish` now uses GitLab's documented CLI image and installs Node/npm before running the existing deterministic scripts. The CLI image source is Alpine-based, but the registry pull and release execution remain unverified because this environment receives HTTP 403 from `registry.gitlab.com`.
 
 ## Verification log
 
@@ -114,6 +115,7 @@ A claim with no opened, verified link is not used.
 | M5 monitor and policy | Focused monitor/smoke/policy tests; CI YAML parse; staged secret-pattern scans | PASS: 8/8 focused tests; nine CI YAML files parsed; four staged scans clean | [Monitor runtime](https://github.com/mayorXBT/Basement/commit/52532a7), [policy](https://github.com/mayorXBT/Basement/commit/49d110d), [CI wiring](https://github.com/mayorXBT/Basement/commit/58fa1fe). No scheduled pipeline URL. |
 | M5 full suite | `npm test`; Layer A; keyless Layer B; privacy static; tracked JS/MJS syntax; CI/flow YAML parse; `npm audit --omit=dev` | PASS: 57/57 tests, 0 failures, 2,113 ms; evals 6/6; 0 vulnerabilities | Local run on `818bdc3`; no GitLab pipeline URL. |
 | M6 documentation and full suite | `npm test`; Layer A; keyless Layer B; privacy static; tracked JS/MJS syntax; CI/flow YAML parse; relative Markdown link check; `npm audit --omit=dev` | PASS: 57/57 tests, 0 failures, 1,992 ms; evals 6/6; links valid; 0 vulnerabilities | Local run after `7afc92d`; README, Devpost draft, and demo plan only, with no publication URL. |
+| Release compatibility review | Current GitLab `release:` documentation and CLI image source review; `npm test`; CI/flow YAML parse; `npm audit --omit=dev` | PASS locally: required CLI added; 57/57 tests, 0 failures, 2,209 ms; YAML parsed; 0 vulnerabilities | [Compatibility fix](https://github.com/mayorXBT/Basement/commit/1193226); registry image and release job not run. |
 
 ## Blocked / needs Mayor
 
