@@ -1,0 +1,101 @@
+release:arm-automerge:
+  extends: .node-job
+  stage: release
+  script:
+    - mkdir -p reports
+    - node scripts/release/arm-automerge.mjs reports/arm-automerge.json
+  artifacts:
+    when: always
+    paths:
+      - reports/arm-automerge.json
+    expire_in: 14 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $AUTOPILOT_PAUSED != "1"'
+
+release:version:
+  extends: .node-job
+  stage: release
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - mkdir -p reports
+    - node scripts/release/next-version.mjs release.env reports/release-version.json
+  artifacts:
+    reports:
+      dotenv: release.env
+    paths:
+      - release.env
+      - reports/release-version.json
+    expire_in: 14 days
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+release:notes:
+  extends: .node-job
+  stage: release
+  needs:
+    - job: release:version
+      artifacts: true
+    - job: secure:privacy-static
+      artifacts: true
+    - job: secure:privacy-canary
+      artifacts: true
+    - job: verify:speech-eval-b
+      artifacts: true
+  script:
+    - mkdir -p reports
+    - node scripts/release/release-notes.mjs release-notes.md reports/release-notes.json
+  artifacts:
+    paths:
+      - release-notes.md
+      - reports/release-notes.json
+    expire_in: 14 days
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+release:publish:
+  extends: .node-job
+  stage: release
+  needs:
+    - job: release:version
+      artifacts: true
+    - job: release:notes
+      artifacts: true
+    - job: secure:privacy-static
+      artifacts: true
+    - job: secure:privacy-canary
+      artifacts: true
+    - job: verify:speech-eval-b
+      artifacts: true
+    - job: package:build
+      artifacts: true
+  script:
+    - mkdir -p evidence release-assets
+    - node scripts/evidence/collect-pipeline.mjs evidence
+    - node scripts/evidence/build-ledger.mjs evidence release-assets/evidence-ledger.jsonl
+    - node scripts/evidence/verify-ledger.mjs release-assets/evidence-ledger.jsonl
+    - node scripts/evidence/render-receipt.mjs release-assets/evidence-ledger.jsonl release-assets/privacy-receipt.md
+    - npm sbom --package-lock-only --sbom-format cyclonedx > release-assets/sbom.cdx.json
+    - cp reports/eval-report.json release-assets/eval-report.json
+  artifacts:
+    paths:
+      - release-notes.md
+      - release-assets/
+    expire_in: 1 year
+  release:
+    name: 'Basement $RELEASE_VERSION'
+    description: release-notes.md
+    tag_name: '$RELEASE_VERSION'
+    ref: '$CI_COMMIT_SHA'
+    assets:
+      links:
+        - name: Privacy receipt
+          url: '$CI_JOB_URL/artifacts/file/release-assets/privacy-receipt.md'
+        - name: Evidence ledger
+          url: '$CI_JOB_URL/artifacts/file/release-assets/evidence-ledger.jsonl'
+        - name: CycloneDX SBOM
+          url: '$CI_JOB_URL/artifacts/file/release-assets/sbom.cdx.json'
+        - name: Coaching evaluation
+          url: '$CI_JOB_URL/artifacts/file/release-assets/eval-report.json'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

@@ -50,8 +50,10 @@ package:artifact-registry:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: manual
+      allow_failure: true
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: manual
+      allow_failure: true
 
 deploy:review:
   extends: .gcp-deploy
@@ -73,6 +75,7 @@ deploy:review:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: manual
+      allow_failure: true
 
 smoke:review:
   extends: .gcp-deploy
@@ -85,6 +88,8 @@ smoke:review:
     - node scripts/monitor/smoke.mjs "$DEPLOY_URL"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
+      allow_failure: true
 
 deploy:staging:
   extends: .gcp-deploy

@@ -10,6 +10,8 @@ include:
   - local: .gitlab/ci/package.yml
   - local: .gitlab/ci/deploy.yml
   - local: .gitlab/ci/agents.yml
+  - local: .gitlab/ci/release.yml
+  - local: .gitlab/ci/govern.yml
 
 stages:
   - .pre
