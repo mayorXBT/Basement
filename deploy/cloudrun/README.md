@@ -96,6 +96,24 @@ CLOUD_RUN_PUBLIC_ACCESS=0
 
 Provider keys stay in Secret Manager and never become GitLab variables. Run `package:artifact-registry`, `deploy:staging`, and `deploy:prod` manually after the setup is complete. Their dependent `smoke:*` jobs run automatically, and staging or production receives traffic only after its smoke check passes. CI exchanges a GitLab OIDC token for short-lived Google credentials and deploys the immutable Artifact Registry digest.
 
+## Hands-off and monitor controls
+
+Keep `AUTOPILOT_MODE=supervised` until a complete supervised run has passed. After billing, WIF, the two Cloud Run services, protected branches/environments, and the deterministic policy have been verified, the owner may set these protected project variables:
+
+```text
+AUTOPILOT_MODE=handsoff
+GCP_DEPLOY_APPROVED=1
+AUTOPILOT_PAUSED=0
+```
+
+`GCP_DEPLOY_APPROVED=1` records the separate cost approval; hands-off mode alone cannot make a deployment automatic. Set `AUTOPILOT_PAUSED=1` to stop repair and production deployment. Remove `GCP_DEPLOY_APPROVED` if cloud spending approval is withdrawn.
+
+After a healthy production revision has the `last-good` tag, create an hourly GitLab pipeline schedule on the default branch with cron `17 * * * *` and variable `PIPELINE_KIND=monitor`. Only `monitor:synthetic`, `monitor:rollback`, and `monitor:incident` are eligible in that schedule. The synthetic job makes four small live requests each hour: health, home page, topic generation, and E01 analysis. Every sixth UTC hour it also attempts transcription only when an owner-approved `MONITOR_AUDIO_PATH` exists; otherwise the report says `skipped-no-approved-clip` and makes no audio claim.
+
+For the disclosed rollback drill, create a temporary schedule with both `PIPELINE_KIND=monitor` and `MONITOR_FIRE_DRILL=1`, run it once, inspect all three job artifacts and the incident issue, then delete or deactivate that schedule. The drill performs the real live checks before deliberately failing and is labelled as a fire drill in both the report and issue. Never run it until a verified `last-good` revision exists.
+
+An hourly schedule creates 24 GitLab pipelines and about 48 Gemini text requests per day, plus four transcription requests per day only if the approved clip is configured. It also consumes GitLab CI minutes and small Cloud Run request/compute usage. Exact cost depends on the owner's GitLab and Google plans and current provider pricing; a zero bill is not guaranteed. Creating the schedule and enabling `GCP_DEPLOY_APPROVED` therefore remain owner actions after the cost gate.
+
 ## Public access gate
 
 The deployment script uses `--no-allow-unauthenticated` unless `CLOUD_RUN_PUBLIC_ACCESS=1`. Do not change that variable or add an `allUsers` invoker binding until the owner explicitly approves making the service public. Private smoke checks use an identity token.
