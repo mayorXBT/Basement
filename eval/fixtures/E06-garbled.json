@@ -1,0 +1,20 @@
+{
+  "id": "E06-garbled",
+  "provenance": "Synthetic ASR-error test fixture authored for this repository on 2026-10-20; not a recording or user speech.",
+  "topic": "A Better Morning",
+  "durationSec": 30,
+  "transcript": "Uh the the um inaudible dog the and then sort of maybe the",
+  "inputMetrics": { "pauses": 6, "speakingRatio": 24, "pitchAverage": 0, "pitchRange": 0 },
+  "labels": { "trueFillers": 3 },
+  "expect": {
+    "deterministic": { "words": 13, "fillers": 3, "wpm": 26, "local": { "fillerControl": 8, "clarity": 67, "confidence": 66, "paceScore": 49 } },
+    "llm": {
+      "bands": { "clarity.score": [0, 60], "confidence.score": [0, 70], "pace.wpm": [10, 40] },
+      "anchorTolerance": 45,
+      "mustMentionAny": ["unclear", "garbled", "couldn't understand", "not enough", "unusable", "unintelligible", "lacks a coherent"],
+      "mustNotMention": ["accent", "gender", "great argument", "strong content"],
+      "listLengths": { "strengths": [1, 3], "improvements": [1, 3] },
+      "requiresUnclearSignal": true
+    }
+  }
+}
