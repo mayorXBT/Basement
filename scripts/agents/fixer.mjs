@@ -103,7 +103,7 @@ async function run() {
   const pipelineId = process.env.CI_PIPELINE_ID;
   const base = process.env.CI_MERGE_REQUEST_DIFF_BASE_SHA;
   const reportPath = "reports/fixer.json";
-  if (!client.configured || !iid || !pipelineId || !base) throw new Error("Fixer requires GitLab MR context and AUTOPILOT_BOT_TOKEN");
+  if (!client.configured || !process.env.AUTOPILOT_BOT_TOKEN || !iid || !pipelineId || !base) throw new Error("Fixer requires GitLab MR context and AUTOPILOT_BOT_TOKEN");
   if (process.env.AUTOPILOT_PAUSED === "1") { writeJson(reportPath, { ok: true, action: "paused" }); return; }
   const attempt = attemptCount(base) + 1;
   if (attempt > 2) { await markNeedsHuman(client, iid, "the two-attempt budget is exhausted"); writeJson(reportPath, { ok: false, action: "budget-exhausted", attempt }); return; }
