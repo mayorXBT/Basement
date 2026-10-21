@@ -35,6 +35,22 @@ verify:flow-parity:
   script:
     - node --test test/flow-parity.test.js
 
+verify:guard-paths:
+  extends: .node-job
+  stage: verify
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - mkdir -p reports
+    - node scripts/agents/guard-paths.mjs "$CI_MERGE_REQUEST_DIFF_BASE_SHA" reports/guard-paths.json
+  artifacts:
+    when: always
+    paths:
+      - reports/guard-paths.json
+    expire_in: 14 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
 verify:speech-eval-a:
   extends: .node-job
   stage: verify
