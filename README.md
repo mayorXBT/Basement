@@ -1,8 +1,87 @@
 # Basement
 
-Basement is an anonymous impromptu speaking practice app. It spins a topic, gives the speaker a timed mission, records the session locally in the browser, and returns a delivery-focused analysis.
+Basement is an anonymous impromptu speaking practice app. Spin a topic, speak for a minute, and get delivery-focused coaching without creating an account.
 
-The product is intentionally account-free. A session is not saved to a database and no user profile is created.
+The existing Vercel deployment at [basement.cefo.dev](https://basement.cefo.dev) remains the before-state and fallback. The GitLab Autopilot factory is implemented on this branch, but GitLab pipeline and Cloud Run evidence are still pending; see [PROGRESS.md](PROGRESS.md) before repeating any autonomy claim.
+
+## Basement Autopilot in one picture
+
+```mermaid
+flowchart LR
+    I[Issue] --> T[Plan: Duo Triage]
+    T --> B[Create: Duo Builder]
+    B --> MR[Merge request]
+    MR --> V[Verify: tests and speech eval]
+    MR --> S[Secure: scans and privacy canary]
+    V --> R[Release: merge, receipt, SBOM]
+    S --> R
+    R --> C[Configure: Cloud Run staging]
+    C --> G[Govern: deterministic policy]
+    G --> P[Production candidate and smoke]
+    P --> E[Evidence comment and issue close]
+    P --> M[Monitor: live probes]
+    M -->|two failures| RB[Rollback to last-good]
+    RB --> IN[Privacy-safe incident]
+```
+
+Agents plan, change code, fix bounded failures, and explain results. Ordinary deterministic jobs own every shipping gate. The default is supervised; production becomes automatic only when the owner separately enables hands-off mode and approves the cloud cost gate.
+
+## The nine stages
+
+| Stage | Main implementation | Runtime proof |
+|---|---|---|
+| Plan | Duo Conductor Triage | Pending GitLab flow session |
+| Create | Duo Conductor Builder | Pending agent-authored MR |
+| Verify | Unit, syntax, parity, path, and speech-eval jobs | Pending GitLab job URL |
+| Secure | GitLab scans, privacy rules, canary, and Guard | Pending GitLab job URL |
+| Package | Immutable container image and digest | Pending registry URL |
+| Release | Version, notes, receipt, ledger, SBOM, and eval report | Pending release URL |
+| Configure | WIF-backed staging and production deployment | Pending environment URL |
+| Monitor | Live synthetic checks, rollback, and incident | Pending scheduled job URL |
+| Govern | Policy, evidence comment, and issue closure | Pending evidence URL |
+
+The detailed map links every source implementation and distinguishes source from run evidence in [docs/STAGES.md](docs/STAGES.md). Until the pending cells have opened, verified GitLab links, the honest claim is “nine stages implemented,” not “9/9 stages run.”
+
+## Privacy promises
+
+Basement treats privacy copy as a release contract. The full wording and enforcement rules are in [PRIVACY_PROMISES.md](PRIVACY_PROMISES.md).
+
+| Promise | How it is checked |
+|---|---|
+| P1 audio is never stored | Static filesystem rule and isolated container diff |
+| P2 speech data is never logged | Static logging rule and unique runtime canary |
+| P3 no accounts or tracking | Source scan plus cookie checks |
+| P4 keys stay server-side | Header-only provider tests, exact health schema, and image scan |
+| P5 only declared processors receive speech | Egress allowlist and fake-provider routing recorder |
+| P6 security headers stay enabled | Exact static, container, and live header checks |
+| P7 payload and abuse limits remain | Source rule and eleventh-request rejection probe |
+| P8 spoken words are data, not instructions | Prompt rule and injection eval fixture |
+| P9 browser storage remains bounded | Static browser-storage rule |
+| P10 microphone tracks stop with the session | Privacy Guard and targeted browser review; not machine-passed |
+
+P1 through P9 have deterministic local checks. P10 is deliberately shown as review-required unless a real Guard artifact proves it. Release receipts fail closed instead of turning missing evidence into a pass.
+
+## Coaching evaluation
+
+The evaluation suite has six synthetic, labelled fixtures covering clean speech, filler precision, pace, pauses, prompt injection, and garbled input. Layer A verifies deterministic metrics and prompt invariants. Layer B runs three samples per fixture, requires a two-of-three majority, compares against the protected baseline, and can reuse redacted cached scores without storing transcripts or provider responses.
+
+The current local baseline passes 6/6 fixtures with `gemini-3.1-flash-lite`. These are synthetic fixtures, not the owner's recorded speech, and there is no GitLab report artifact yet. Run `node scripts/eval/run-eval.mjs a` for Layer A and `node scripts/eval/run-eval.mjs b` for Layer B.
+
+## Try the Autopilot
+
+In an enabled GitLab project, create an issue from the `autopilot` template, describe one small outcome, and keep the `autopilot` label. Triage should post bounded acceptance criteria and Builder should open the linked MR. The demo-only “Add a Job interview niche” feature is intentionally absent from this branch so the flow, not a person, can create it.
+
+For judges: check `PROGRESS.md` first. `AUTOPILOT_PAUSED=1` may intentionally disable agent repair and production changes during judging, and the current temporary GitLab project has not yet been authenticated from this build environment.
+
+## Before and after
+
+| Before at [`91810f0`](https://github.com/mayorXBT/Basement/commit/91810f090ebea09ff67a724e3bb6358bc68a2fb9) | Autopilot branch today |
+|---|---|
+| Vercel deploy from GitHub, with no CI configuration | GitLab CI source for all nine lifecycle stages |
+| Tests ran only when invoked locally | 57 local tests plus syntax, dependency, privacy, eval, and container gates |
+| Privacy promises were prose | P1-P9 deterministic checks; P10 review-required |
+| No coaching regression suite | Six labelled synthetic fixtures with majority scoring and a protected baseline |
+| No release evidence bundle | Receipt, tamper-evident ledger, SBOM, and eval assets implemented; external release pending |
 
 ## What It Does
 
@@ -18,7 +97,7 @@ The product is intentionally account-free. A session is not saved to a database 
 - Shows clarity, confidence, filler control, speaking pace, pitch span, transcript, strengths, and next moves.
 - Plays a completion sound and confetti effect when a mission ends.
 
-## Architecture
+## Application architecture
 
 ```text
 Browser
@@ -47,7 +126,7 @@ The app does not use Supabase because it currently has no accounts, saved histor
 ## Local Setup
 
 ```powershell
-npm install
+npm ci
 Copy-Item .env.example .env.local
 ```
 
@@ -139,7 +218,9 @@ Before a public launch, rotate any API keys that have been used during developme
 
 ## Deployment
 
-The app is prepared for Vercel through `api/index.js` and `vercel.json`. Vercel runs the Express app as a Node function and serves the public UI through the same app.
+The Autopilot deployment path uses private-by-default Cloud Run services in `europe-west1`, immutable Artifact Registry digests, Secret Manager, and GitLab OIDC Workload Identity Federation. The exact owner-run setup, cost warning, hands-off controls, and monitor schedule are in [deploy/cloudrun/README.md](deploy/cloudrun/README.md). Do not run those resource-creating commands without billing approval.
+
+The existing Vercel path through `api/index.js` and `vercel.json` remains untouched as the before-state and non-GCP fallback. Vercel runs the Express app as a Node function and serves the public UI through the same app.
 
 Configure these Vercel environment variables for Preview and Production:
 
@@ -152,6 +233,10 @@ Configure these Vercel environment variables for Preview and Production:
 - `GROQ_TRANSCRIPTION_MODEL`
 
 The custom domain is intended to be `basement.cefo.dev`.
+
+## Credits and licence
+
+Basement is available under the [MIT License](LICENSE). The engineering approach was inspired by the [Pragmatic Programmer skill](https://github.com/iamarunr/pragmatic-programmer-skill); that skill is credited but not included because its upstream repository has no licence file.
 
 ## Verification
 
