@@ -32,7 +32,7 @@ test("agent cannot claim a deterministic rule that did not fire", () => {
 });
 
 test("agent diagnostics redact common credentials and canary values", () => {
-  const redacted = redactText("authorization: Bearer abcdefghijklmnop GEMINI_API_KEY=secret-value BASEMENT-CANARY-44-random");
-  assert.doesNotMatch(redacted, /abcdefghijklmnop|secret-value|BASEMENT-CANARY-44-random/);
+  const redacted = redactText("authorization: Bearer abcdefghijklmnop GEMINI_API_KEY=secret-value BASEMENT-CANARY-44-random transcript=\"private words\" <transcript>more words</transcript>");
+  assert.doesNotMatch(redacted, /abcdefghijklmnop|secret-value|BASEMENT-CANARY-44-random|private words|more words/);
   assert.match(redacted, /REDACTED/);
 });

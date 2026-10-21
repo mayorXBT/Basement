@@ -14,7 +14,7 @@ export class GitLabClient {
     return Boolean(this.apiUrl && this.projectId && this.token);
   }
 
-  async request(pathname, { method = "GET", body } = {}) {
+  async request(pathname, { method = "GET", body, responseType = "json" } = {}) {
     const apiUrl = required(this.apiUrl, "CI_API_V4_URL");
     const token = required(this.token, "AUTOPILOT_BOT_TOKEN or GITLAB_TOKEN");
     const response = await fetch(`${apiUrl}${pathname}`, {
@@ -28,7 +28,7 @@ export class GitLabClient {
     });
     if (!response.ok) throw new Error(`GitLab API ${method} ${pathname} returned ${response.status}`);
     if (response.status === 204) return null;
-    return response.json();
+    return responseType === "text" ? response.text() : response.json();
   }
 
   projectPath(suffix) {
@@ -49,6 +49,22 @@ export class GitLabClient {
 
   createMergeRequestNote(iid, body) {
     return this.request(this.projectPath(`/merge_requests/${encodeURIComponent(iid)}/notes`), { method: "POST", body: { body } });
+  }
+
+  getMergeRequest(iid) {
+    return this.request(this.projectPath(`/merge_requests/${encodeURIComponent(iid)}`));
+  }
+
+  updateMergeRequest(iid, body) {
+    return this.request(this.projectPath(`/merge_requests/${encodeURIComponent(iid)}`), { method: "PUT", body });
+  }
+
+  listPipelineJobs(pipelineId) {
+    return this.request(this.projectPath(`/pipelines/${encodeURIComponent(pipelineId)}/jobs?per_page=100&include_retried=true`));
+  }
+
+  getJobTrace(jobId) {
+    return this.request(this.projectPath(`/jobs/${encodeURIComponent(jobId)}/trace`), { responseType: "text" });
   }
 
   replyToMergeRequestDiscussion(iid, discussionId, body) {

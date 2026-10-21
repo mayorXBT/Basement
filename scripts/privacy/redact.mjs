@@ -6,7 +6,9 @@ const replacements = [
   [/\bglpat-[0-9A-Za-z_-]+\b/g, "[REDACTED_GITLAB_TOKEN]"],
   [/\b(?:Bearer|Token)\s+[A-Za-z0-9._~+/=-]{12,}\b/gi, "[REDACTED_AUTHORIZATION]"],
   [/(?:x-goog-api-key|private-token|authorization)(\s*[:=]\s*)[^\s,;]+/gi, "$1[REDACTED]"],
-  [/(?:GEMINI_API_KEY|EVAL_GEMINI_API_KEY|GITLAB_TOKEN|DUO_CLI_TOKEN|AUTOPILOT_BOT_TOKEN)(\s*[:=]\s*)[^\s,;]+/g, "$1[REDACTED]"]
+  [/(?:GEMINI_API_KEY|EVAL_GEMINI_API_KEY|GITLAB_TOKEN|DUO_CLI_TOKEN|AUTOPILOT_BOT_TOKEN)(\s*[:=]\s*)[^\s,;]+/g, "$1[REDACTED]"],
+  [/(<transcript>)[^\n<]*(<\/transcript>)/gi, "$1[REDACTED_SPEECH]$2"],
+  [/(\b(?:transcript|topic|audio|requestBody|req\.body)\b\s*[:=]\s*)(["'`])[^\n]*?\2/gi, "$1$2[REDACTED_SPEECH]$2"]
 ];
 
 export function redactText(value) {
