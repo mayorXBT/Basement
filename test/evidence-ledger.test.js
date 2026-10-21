@@ -3,6 +3,7 @@ import test from "node:test";
 import { buildLedger, canonicalJson } from "../scripts/evidence/build-ledger.mjs";
 import { verifyLedger } from "../scripts/evidence/verify-ledger.mjs";
 import { renderReceipt } from "../scripts/evidence/render-receipt.mjs";
+import { evidenceComment } from "../scripts/evidence/post-evidence.mjs";
 
 const entries = [
   { job: "secure:privacy-static", stage: "secure", status: "success", started_at: "2026-10-21T10:01:00Z", artifact_sha256: {}, summary: {} },
@@ -34,4 +35,12 @@ test("privacy receipt refuses to claim missing P10 review", () => {
   assert.match(receipt, /P1 audio never stored \| PASS/);
   assert.match(receipt, /P10 microphone lifecycle \| REVIEW REQUIRED/);
   assert.match(receipt, new RegExp(ledger.at(-1).hash));
+});
+
+test("evidence comment maps available stage links without inventing missing ones", () => {
+  const ledger = buildLedger(entries.map((entry, index) => ({ ...entry, job_url: `https://gitlab.example/jobs/${index + 1}` })));
+  const body = evidenceComment({ issueUrl: "https://gitlab.example/issues/2", mergeRequestUrl: "https://gitlab.example/mr/3", releaseUrl: "https://gitlab.example/releases/v1.1.0", receiptUrl: "https://gitlab.example/receipt", ledger, pipelineUrl: "https://gitlab.example/pipelines/4", governJobUrl: "https://gitlab.example/jobs/9" });
+  assert.match(body, /\[verify:unit\]\(https:\/\/gitlab\.example\/jobs\/2\)/);
+  assert.match(body, /\| Monitor \| not produced \|/);
+  assert.match(body, new RegExp(ledger.at(-1).hash));
 });
