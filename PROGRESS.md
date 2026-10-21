@@ -12,7 +12,7 @@ Mode: supervised | GitLab project: https://gitlab.com/mayorzeke/life-after-code 
 - [ ] M2 configure and deploy (local implementation complete; Cloud Run/WIF execution and GitLab environment evidence are approval- and credential-blocked)
 - [ ] M3 privacy guard and speech eval (local must-have and should-have implementation complete; GitLab jobs, MR artifacts, and Guard threads remain blocked by missing GitLab credentials)
 - [ ] M4 Duo flow, fixer, release, govern (local factory complete; AI Catalog validation and the first supervised GitLab run are blocked by missing GitLab access)
-- [ ] M5 hands-off, monitor, dry runs, demo recorded
+- [ ] M5 hands-off, monitor, dry runs, demo recorded (local policy, synthetic recovery, and nine-stage evidence map complete; real schedules, fire drill, three dry runs, and recording are blocked by GitLab/GCP access)
 - [ ] M6 README, Devpost, video, submitted
 
 ## Claim evidence
@@ -21,14 +21,14 @@ A claim with no opened, verified link is not used.
 
 | Claim | Status (proven / softened / cut) | Evidence link(s) | Produced in |
 |---|---|---|---|
-| C1 zero touches issue to prod | | | M5 |
+| C1 zero touches issue to prod | softened | [Deterministic hands-off policy](https://github.com/mayorXBT/Basement/commit/49d110d) and [cost-gated pipeline wiring](https://github.com/mayorXBT/Basement/commit/58fa1fe) exist. No issue-to-production run exists, so do not call the project Hands-off yet. | M5 |
 | C2 promises machine-checked (n of 10) | softened | P1-P9 have deterministic checks; P10 is agent-reviewed. [Static rules and eight mutation tests](https://github.com/mayorXBT/Basement/commit/5cbb8ee), [isolated runtime canary](https://github.com/mayorXBT/Basement/commit/347f213), [CI gates](https://github.com/mayorXBT/Basement/commit/14f541f). No GitLab job or JUnit URL exists yet. | M3 |
 | C3 planted bug caught and fixed | softened | [Bounded Fixer implementation](https://github.com/mayorXBT/Basement/commit/921456a) and [failure job](https://github.com/mayorXBT/Basement/commit/da8576a) exist. No failed/green pipeline pair, Fixer commit, or Guard thread exists yet. | M4/M5 |
 | C4 chaos drill disclosed | softened | [Catalog and mutation tests](https://github.com/mayorXBT/Basement/commit/5cbb8ee), [Conductor prompts and MR template](https://github.com/mayorXBT/Basement/commit/ceeaef6). No GitLab chaos issue/MR exists yet. | M4 |
 | C5 coaching regression caught | softened | [Layer A/B implementation and verified cached baseline](https://github.com/mayorXBT/Basement/commit/f6cf497), [GitLab eval jobs](https://github.com/mayorXBT/Basement/commit/811fe16). Local live-provider development caught E05 and E06 expectation failures before the final 6/6 pass, but there is no historical blocked MR or GitLab report URL. Do not claim Mayor-recorded speech. | M3 |
 | C6 guard mutation-tested | softened | [CH-01 through CH-08 mutation suite](https://github.com/mayorXBT/Basement/commit/5cbb8ee) passed 8/8 locally. No opened GitLab job URL exists yet. | M3 |
-| C7 9/9 stages | | | M5 |
-| C8 self-healing rollback | | | M5 |
+| C7 9/9 stages | softened | [Nine-stage source map](https://github.com/mayorXBT/Basement/commit/818bdc3) identifies every implementation and leaves every runtime proof explicitly pending. No single GitLab run has nine opened job/session links. | M5 |
+| C8 self-healing rollback | softened | [Tested synthetic, rollback, and incident implementation](https://github.com/mayorXBT/Basement/commit/52532a7) and [scheduled CI chain](https://github.com/mayorXBT/Basement/commit/58fa1fe) exist. No Cloud Run traffic move or incident issue has occurred. | M5 |
 | C9 receipt and verifiable ledger | softened | [Canonical hash chain and honest P1-P10 receipt](https://github.com/mayorXBT/Basement/commit/0188421), [idempotent issue evidence comment](https://github.com/mayorXBT/Basement/commit/68d6d69), [release/govern jobs](https://github.com/mayorXBT/Basement/commit/00dc2a6). No release or artifact URL exists yet. | M4 |
 | C10 Cloud Run via WIF | softened | [Cost-gated Cloud Run configuration](https://github.com/mayorXBT/Basement/tree/gitlab-autopilot/deploy/cloudrun), [WIF and deploy jobs](https://github.com/mayorXBT/Basement/blob/gitlab-autopilot/.gitlab/ci/deploy.yml). No deployment, environment, or WIF job URL exists yet. | M2 |
 | C11 agent threads gate merge | softened | [Guarded Duo/Gemini adapter](https://github.com/mayorXBT/Basement/commit/3aa69ce) and [secure job](https://github.com/mayorXBT/Basement/commit/9b99a7b) exist, but no GitLab MR thread or project thread-resolution setting has been verified. | M4 |
@@ -73,6 +73,11 @@ A claim with no opened, verified link is not used.
 - 21 Oct 2026: Privacy receipts mark P10 `REVIEW REQUIRED` unless a parsed Privacy Guard artifact with zero blockers is present. Machine checks must not be presented as microphone-lifecycle review.
 - 21 Oct 2026: The evidence ledger uses canonical, ordered JSON and a SHA-256 previous-hash chain. It is described as tamper-evident, not tamper-proof; a mutation test proves modified entries fail verification.
 - 21 Oct 2026: Keep M4 open because generated YAML and fake/local API seams cannot prove AI Catalog creation, a Work item trigger, agent-authored commits, MR thread gating, auto-merge, a GitLab release, or an issue evidence comment.
+- 21 Oct 2026: Hands-off deployment requires both `AUTOPILOT_MODE=handsoff` and the separate `GCP_DEPLOY_APPROVED=1` cost approval, while `AUTOPILOT_PAUSED=1` disables it. This preserves the owner's spending gate even after the autonomy mode changes.
+- 21 Oct 2026: Monitor schedules are isolated from verify, secure, package, release, and deploy jobs. An hourly health schedule must not accidentally publish a release or create a cloud deployment.
+- 21 Oct 2026: The six-hour transcription monitor reports `skipped-no-approved-clip` until an owner-approved three-second clip exists. A missing recording cannot be converted into a passing audio claim.
+- 21 Oct 2026: Production recovery is deterministic before it is agentic: two failed synthetic attempts invoke only `rollback.sh` against the recorded `last-good` tag, then the incident issue is created, and the optional agent can add only a bounded narrative.
+- 21 Oct 2026: Keep M5 open and C1/C7/C8 softened because local tests and source links do not prove GitLab hands-off execution, nine run stages, or a Cloud Run rollback. The GitLab push still fails before authentication with `could not read Username` because no token is available.
 
 ## Verification log
 
@@ -102,6 +107,8 @@ A claim with no opened, verified link is not used.
 | M4 evidence | Build one-entry ledger, verify it, render receipt from real M3 reports | PASS: hash chain verified; receipt reported P1-P9 PASS and P10 REVIEW REQUIRED | [Ledger commit](https://github.com/mayorXBT/Basement/commit/0188421), [govern commit](https://github.com/mayorXBT/Basement/commit/68d6d69). No external artifact URL. |
 | M4 release | Version and fallback-note unit tests; local `npm sbom --package-lock-only --sbom-format cyclonedx` | PASS: semver label rules, 120-word/hype bound, CycloneDX 1.5 with 69 components | [Release scripts](https://github.com/mayorXBT/Basement/commit/f70d6c6), [CI jobs](https://github.com/mayorXBT/Basement/commit/00dc2a6). No release created. |
 | M4 full suite | `npm test`; Layer A; keyless Layer B; privacy static; tracked JS/MJS syntax; CI/flow YAML parse; `npm audit --omit=dev` | PASS: 50/50 tests, 0 failures, 2,012 ms; evals 6/6; 0 vulnerabilities | Local run on `00dc2a6`; no GitLab pipeline URL. |
+| M5 monitor and policy | Focused monitor/smoke/policy tests; CI YAML parse; staged secret-pattern scans | PASS: 8/8 focused tests; nine CI YAML files parsed; four staged scans clean | [Monitor runtime](https://github.com/mayorXBT/Basement/commit/52532a7), [policy](https://github.com/mayorXBT/Basement/commit/49d110d), [CI wiring](https://github.com/mayorXBT/Basement/commit/58fa1fe). No scheduled pipeline URL. |
+| M5 full suite | `npm test`; Layer A; keyless Layer B; privacy static; tracked JS/MJS syntax; CI/flow YAML parse; `npm audit --omit=dev` | PASS: 57/57 tests, 0 failures, 2,113 ms; evals 6/6; 0 vulnerabilities | Local run on `818bdc3`; no GitLab pipeline URL. |
 
 ## Blocked / needs Mayor
 
@@ -110,6 +117,8 @@ A claim with no opened, verified link is not used.
 - Duo CLI (`duo`) and `glab` are absent locally, and no `DUO_CLI_TOKEN` is available. The Gemini fallback is implemented and protocol-tested, but Duo headless auth, credits, and command syntax remain unverified until GitLab onboarding is available.
 - Conductor `subagents`, `context:inputs.user_rule`, `get_work_item`, and `update_issue` match the PRD/current schema source but must be validated in the target project's flow builder. `.gitlab/duo/agent-config.yml` must first land on GitLab `master` because GitLab ignores it on non-default branches.
 - M4's first supervised issue-to-production run, auto-merge API behavior, protected-thread setting, release assets, and governed issue closure require the GitLab project and, for deployment, the separately approval-gated GCP setup.
+- M5's hourly schedule, three clean issue-to-production dry runs, disclosed fire drill, rollback issue, and demo recording require authenticated GitLab plus the separately approval-gated live Cloud Run setup. The factory is implemented, but none of these events has happened.
+- Hands-off mode must not be enabled until one supervised run has validated the target project's GitLab job names, same-stage `needs`, auto-merge API, protected environment, WIF exchange, `last-good` tag, and governance policy.
 - Mayor-owned E01-E04 recordings/transcripts and the three-second canary clip are absent. Current eval fixtures are synthetic and the runtime canary uses generated bytes, so claims about replaying Mayor's speech or voice must remain cut.
 - Replace the GitLab remote when the hackathon-provisioned project URL is supplied.
 - Cloud Run, Artifact Registry, Secret Manager, API enablement, and billing remain approval-gated. M2 will supply exact commands and cost posture but will not create resources.
