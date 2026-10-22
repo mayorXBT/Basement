@@ -1,19 +1,13 @@
 sast:
   stage: secure
-  extends: .skip-monitor-schedule
 
 semgrep-sast:
   stage: secure
   allow_failure: false
-  extends: .skip-monitor-schedule
 
 secret_detection:
   stage: secure
   allow_failure: false
-  extends: .skip-monitor-schedule
-
-dependency-scanning:
-  extends: .skip-monitor-schedule
 
 secure:privacy-static:
   extends: .skip-monitor-schedule
