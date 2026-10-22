@@ -17,7 +17,7 @@ export GCP_PROJECT_ID="replace-me"
 export GCP_REGION="europe-west1"
 export GCP_WIF_POOL="gitlab"
 export GCP_WIF_PROVIDER="gitlab-provider"
-export GITLAB_PROJECT_PATH="mayorzeke/life-after-code"
+export GITLAB_PROJECT_PATH="gitlab-ai-hackathon/transcend-october-2026/43556545/showcase"
 gcloud config set project "$GCP_PROJECT_ID"
 gcloud projects describe "$GCP_PROJECT_ID" --format='value(projectNumber)'
 ```

@@ -2,7 +2,7 @@
 
 Basement is an anonymous impromptu speaking practice app. Spin a topic, speak for a minute, and get delivery-focused coaching without creating an account.
 
-The existing Vercel deployment at [basement.cefo.dev](https://basement.cefo.dev) remains the before-state and fallback. The GitLab Autopilot factory is implemented on this branch, but GitLab pipeline and Cloud Run evidence are still pending; see [PROGRESS.md](PROGRESS.md) before repeating any autonomy claim.
+The existing Vercel deployment at [basement.cefo.dev](https://basement.cefo.dev) remains the before-state and fallback. The Autopilot branch now has a [green GitLab pipeline](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2978492394) for Verify, Secure, and Package; Duo, release, and Cloud Run run evidence remain pending. See [PROGRESS.md](PROGRESS.md) before repeating any autonomy claim.
 
 ## Basement Autopilot in one picture
 
@@ -32,15 +32,15 @@ Agents plan, change code, fix bounded failures, and explain results. Ordinary de
 |---|---|---|
 | Plan | Duo Conductor Triage | Pending GitLab flow session |
 | Create | Duo Conductor Builder | Pending agent-authored MR |
-| Verify | Unit, syntax, parity, path, and speech-eval jobs | Pending GitLab job URL |
-| Secure | GitLab scans, privacy rules, canary, and Guard | Pending GitLab job URL |
-| Package | Immutable container image and digest | Pending registry URL |
+| Verify | Unit, syntax, parity, path, and speech-eval jobs | [Passing unit job](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17397617381) |
+| Secure | GitLab scans, privacy rules, canary, and Guard | [Passing privacy canary](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17397617390) |
+| Package | Immutable container image and digest | [Passing registry push](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17397617391) |
 | Release | Version, notes, receipt, ledger, SBOM, and eval report | Pending release URL |
 | Configure | WIF-backed staging and production deployment | Pending environment URL |
 | Monitor | Live synthetic checks, rollback, and incident | Pending scheduled job URL |
 | Govern | Policy, evidence comment, and issue closure | Pending evidence URL |
 
-The detailed map links every source implementation and distinguishes source from run evidence in [docs/STAGES.md](docs/STAGES.md). Until the pending cells have opened, verified GitLab links, the honest claim is “nine stages implemented,” not “9/9 stages run.”
+The detailed map links every source implementation and distinguishes source from run evidence in [docs/STAGES.md](docs/STAGES.md). The honest runtime count is currently 3/9 stages: Verify, Secure, and Package.
 
 ## Privacy promises
 
@@ -59,26 +59,26 @@ Basement treats privacy copy as a release contract. The full wording and enforce
 | P9 browser storage remains bounded | Static browser-storage rule |
 | P10 microphone tracks stop with the session | Privacy Guard and targeted browser review; not machine-passed |
 
-P1 through P9 have deterministic local checks. P10 is deliberately shown as review-required unless a real Guard artifact proves it. Release receipts fail closed instead of turning missing evidence into a pass.
+P1 through P9 have deterministic checks that pass both locally and in the showcase pipeline. P10 is deliberately shown as review-required unless a real Guard artifact proves it. Release receipts fail closed instead of turning missing evidence into a pass.
 
 ## Coaching evaluation
 
 The evaluation suite has six synthetic, labelled fixtures covering clean speech, filler precision, pace, pauses, prompt injection, and garbled input. Layer A verifies deterministic metrics and prompt invariants. Layer B runs three samples per fixture, requires a two-of-three majority, compares against the protected baseline, and can reuse redacted cached scores without storing transcripts or provider responses.
 
-The current local baseline passes 6/6 fixtures with `gemini-3.1-flash-lite`. These are synthetic fixtures, not the owner's recorded speech, and there is no GitLab report artifact yet. Run `node scripts/eval/run-eval.mjs a` for Layer A and `node scripts/eval/run-eval.mjs b` for Layer B.
+The current local baseline passes 6/6 fixtures with `gemini-3.1-flash-lite`, and [Layer A passes on GitLab](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17397617385). These are synthetic fixtures, not the owner's recorded speech; the MR-only Layer B report remains pending. Run `node scripts/eval/run-eval.mjs a` for Layer A and `node scripts/eval/run-eval.mjs b` for Layer B.
 
 ## Try the Autopilot
 
 In an enabled GitLab project, create an issue from the [`autopilot` template](.gitlab/issue_templates/autopilot.md), describe one small outcome, and keep the `autopilot` label. Triage should post bounded acceptance criteria and Builder should open the linked MR. The demo-only “Add a Job interview niche” feature is intentionally absent from this branch so the flow, not a person, can create it.
 
-For judges: check `PROGRESS.md` first. `AUTOPILOT_PAUSED=1` may intentionally disable agent repair and production changes during judging, and the current temporary GitLab project has not yet been authenticated from this build environment.
+For judges: check `PROGRESS.md` first. `AUTOPILOT_PAUSED=1` may intentionally disable agent repair and production changes during judging. The [showcase project](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase) receives this branch through a non-force GitHub Actions mirror; its Duo configuration becomes active only after the branch lands on GitLab's default branch through an MR.
 
 ## Before and after
 
 | Before at [`91810f0`](https://github.com/mayorXBT/Basement/commit/91810f090ebea09ff67a724e3bb6358bc68a2fb9) | Autopilot branch today |
 |---|---|
 | Vercel deploy from GitHub, with no CI configuration | GitLab CI source for all nine lifecycle stages |
-| Tests ran only when invoked locally | 57 local tests plus syntax, dependency, privacy, eval, and container gates |
+| Tests ran only when invoked locally | 57 tests plus syntax, dependency, privacy, eval, and container gates in a [green GitLab pipeline](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2978492394) |
 | Privacy promises were prose | P1-P9 deterministic checks; P10 review-required |
 | No coaching regression suite | Six labelled synthetic fixtures with majority scoring and a protected baseline |
 | No release evidence bundle | Receipt, tamper-evident ledger, SBOM, and eval assets implemented; external release pending |

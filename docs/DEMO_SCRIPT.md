@@ -4,7 +4,7 @@ Do not record the final voiceover until every proof URL used below has been open
 
 ## Evidence-dependent cut
 
-The full cut requires a live GitLab flow, a successful issue-to-production run, a failed and repaired privacy drill, a release, Cloud Run, a governed closing comment, and a rollback drill. Those are currently pending. If they are still missing at recording time, omit those claims and record a shorter source-and-local-verification walkthrough. Never stage activity or describe a manual job as automatic.
+The full cut requires a live GitLab flow, a successful issue-to-production run, a failed and repaired privacy drill, a release, Cloud Run, a governed closing comment, and a rollback drill. Those are currently pending. The showcase branch does have real Verify, Secure, and Package evidence in pipeline 2978492394. If the remaining proof is still missing at recording time, omit those claims and record a shorter source-and-branch-pipeline walkthrough. Never stage activity or describe a manual job as automatic.
 
 | Time | Voiceover | On-screen proof | Required evidence |
 |---|---|---|---|
@@ -20,13 +20,13 @@ The full cut requires a live GitLab flow, a successful issue-to-production run, 
 | 2:35-2:48 | “The issue closes with its evidence. A disclosed monitor drill rolls traffic back to the recorded last-good revision.” | Evidence comment and fire-drill incident | Issue, rollback job, and incident URLs |
 | 2:48-2:58 | “That is the lifecycle, from issue to evidence.” | Stage map with only proven ticks | `docs/STAGES.md` run links |
 
-## Softened cut when external proof is unavailable
+## Softened cut with branch-pipeline proof
 
-Use this wording with a source walkthrough and local test output:
+Use this wording with the showcase pipeline, its privacy jobs, the registry push, source, and local test output:
 
-> I built the factory for nine lifecycle stages, with agents proposing changes and deterministic jobs owning every gate. Locally, 57 tests pass, eight privacy mutations are caught, the container canary and six synthetic coaching fixtures pass, and rollback selection is unit-tested. GitLab and Cloud Run run evidence is still pending, so I am showing this as a supervised implementation, not a hands-off production claim.
+> I built the factory for nine lifecycle stages, with agents proposing changes and deterministic jobs owning every gate. A real GitLab pipeline proves three stages today: Verify, Secure, and Package. It runs 57 tests, catches all eight privacy mutations, passes the isolated canary and six synthetic Layer A fixtures, and pushes the image by immutable digest. The Duo flow, release, Cloud Run, monitor, and governance evidence is still pending, so I am showing a supervised implementation, not a hands-off production claim.
 
-Show the actual `npm test` summary, `reports/privacy-static.json`, cached evaluation summary, Conductor source, CI graph source, privacy receipt test, and `docs/STAGES.md`. Do not show a mock pipeline, fake job URL, fabricated issue, or edited status badge.
+Show pipeline 2978492394, the opened job logs linked from `docs/STAGES.md`, the actual `npm test` summary, Conductor source, privacy receipt test, and the stage map. Do not show a mock pipeline, fake job URL, fabricated issue, or edited status badge.
 
 ## Capture checklist
 
