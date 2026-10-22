@@ -1,6 +1,7 @@
 .node-job:
   image: node:22-slim
   before_script:
+    - apt-get update && apt-get install --yes --no-install-recommends git && rm -rf /var/lib/apt/lists/*
     - npm ci --ignore-scripts
 
 verify:unit:
