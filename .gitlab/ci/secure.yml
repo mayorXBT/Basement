@@ -7,11 +7,6 @@ semgrep-sast:
   allow_failure: false
   extends: .skip-monitor-schedule
 
-gitlab-advanced-sast:
-  stage: secure
-  allow_failure: false
-  extends: .skip-monitor-schedule
-
 secret_detection:
   stage: secure
   allow_failure: false
