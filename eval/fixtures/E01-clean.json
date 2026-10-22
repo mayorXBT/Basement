@@ -1,0 +1,19 @@
+{
+  "id": "E01-clean",
+  "provenance": "Synthetic test fixture authored for this repository on 2026-10-20; not a recording or user speech.",
+  "topic": "A Small Habit That Matters",
+  "durationSec": 40,
+  "transcript": "A short evening walk has become the most useful part of my day. It gives me a clear boundary between work and rest, and it creates space to notice what I have been carrying in my head. I return home calmer, more patient, and ready to listen. The habit is simple enough to keep even on busy days. Its value comes from repetition, not intensity, and that makes it a practical example of how small choices can steadily improve daily life.",
+  "inputMetrics": { "pauses": 1, "speakingRatio": 88, "pitchAverage": 148, "pitchRange": 38 },
+  "labels": { "trueFillers": 0 },
+  "expect": {
+    "deterministic": { "words": 81, "fillers": 0, "wpm": 122, "local": { "fillerControl": 100, "clarity": 89, "confidence": 89, "paceScore": 92 } },
+    "llm": {
+      "bands": { "fillerControl.score": [70, 100], "pace.wpm": [110, 170] },
+      "anchorTolerance": 30,
+      "mustMentionAny": ["clear", "example", "habit", "pace"],
+      "mustNotMention": ["accent", "microphone", "gender", "voice is too"],
+      "listLengths": { "strengths": [1, 3], "improvements": [1, 3] }
+    }
+  }
+}

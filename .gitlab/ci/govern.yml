@@ -1,0 +1,55 @@
+govern:policy:
+  extends: .node-job
+  stage: production
+  needs:
+    - job: smoke:staging
+      artifacts: true
+    - job: release:publish
+      artifacts: true
+  script:
+    - mkdir -p reports
+    - node scripts/evidence/policy.mjs reports/govern-policy.json
+  artifacts:
+    when: always
+    paths:
+      - reports/govern-policy.json
+    expire_in: 1 year
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+govern:evidence:
+  extends: .node-job
+  stage: govern
+  needs:
+    - job: release:version
+      artifacts: true
+    - job: release:publish
+      artifacts: true
+    - job: secure:privacy-static
+      artifacts: true
+    - job: secure:privacy-canary
+      artifacts: true
+    - job: verify:speech-eval-b
+      artifacts: true
+    - job: smoke:candidate
+      artifacts: false
+  script:
+    - mkdir -p evidence reports
+    - node scripts/evidence/collect-pipeline.mjs evidence
+    - node scripts/evidence/build-ledger.mjs evidence evidence-ledger.jsonl
+    - node scripts/evidence/verify-ledger.mjs evidence-ledger.jsonl
+    - node scripts/evidence/render-receipt.mjs evidence-ledger.jsonl privacy-receipt.md
+    - node scripts/evidence/post-evidence.mjs evidence-ledger.jsonl reports/post-evidence.json
+  artifacts:
+    when: always
+    paths:
+      - evidence-ledger.jsonl
+      - privacy-receipt.md
+      - reports/post-evidence.json
+    expire_in: 1 year
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

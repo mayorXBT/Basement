@@ -1,0 +1,19 @@
+{
+  "id": "E04-halting",
+  "provenance": "Synthetic test fixture authored for this repository on 2026-10-20; not a recording or user speech.",
+  "topic": "A Useful Failure",
+  "durationSec": 60,
+  "transcript": "My most useful failure was a workshop that nobody attended. I had prepared slides and examples, but I had not asked whether the timing worked for the people I invited. The empty room was embarrassing. It also made the problem clear. Preparation cannot replace listening. The next time, I asked people about the schedule, shortened the session, and shared the goal in advance. More people came, and the discussion was stronger. The failure taught me to test the invitation before polishing the presentation.",
+  "inputMetrics": { "pauses": 7, "speakingRatio": 53, "pitchAverage": 142, "pitchRange": 28 },
+  "labels": { "trueFillers": 0 },
+  "expect": {
+    "deterministic": { "words": 83, "fillers": 0, "wpm": 83, "local": { "fillerControl": 100, "clarity": 77, "confidence": 70, "paceScore": 74 } },
+    "llm": {
+      "bands": { "pace.score": [30, 90], "pace.wpm": [55, 100] },
+      "anchorTolerance": 35,
+      "mustMentionAny": ["pace", "pause", "flow", "halting"],
+      "mustNotMention": ["accent", "microphone", "gender", "voice is too"],
+      "listLengths": { "strengths": [1, 3], "improvements": [1, 3] }
+    }
+  }
+}

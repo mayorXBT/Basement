@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "model": "gemini-3.1-flash-lite",
+  "seedStatus": "accepted",
+  "generatedAt": "2026-10-21T03:55:14.728Z",
+  "fixtures": {
+    "E01-clean": {
+      "cacheKey": "1fd6d5caae7b9ff5ac2b0f09142dfc7f69ba3c91dcdb4a763df4e8210a78adfd",
+      "anchorMean": 0,
+      "samples": [
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:fillerControl.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 95, "confidence": 98, "fillerControl": 100, "pace": 92, "wpm": 122 }, "anchorDistances": { "fillerControl": 0, "pace": 0 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:fillerControl.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 95, "confidence": 98, "fillerControl": 100, "pace": 92, "wpm": 122 }, "anchorDistances": { "fillerControl": 0, "pace": 0 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:fillerControl.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 95, "confidence": 98, "fillerControl": 100, "pace": 92, "wpm": 122 }, "anchorDistances": { "fillerControl": 0, "pace": 0 } }
+      ]
+    },
+    "E02-filler-heavy": {
+      "cacheKey": "5b3c587a2dcc0764e0cbc5f215d2f55f8743ac92567d06d57393e51721f932a6",
+      "anchorMean": 9.5,
+      "samples": [
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:fillerControl.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 85, "confidence": 70, "fillerControl": 45, "pace": 80, "wpm": 126 }, "anchorDistances": { "fillerControl": 5, "pace": 14 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:fillerControl.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 85, "confidence": 70, "fillerControl": 45, "pace": 80, "wpm": 126 }, "anchorDistances": { "fillerControl": 5, "pace": 14 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:fillerControl.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 85, "confidence": 70, "fillerControl": 45, "pace": 80, "wpm": 126 }, "anchorDistances": { "fillerControl": 5, "pace": 14 } }
+      ]
+    },
+    "E03-rushed": {
+      "cacheKey": "0bc69cdfa56aec9007a6f5d52b47e93f34e6d5272138c4141f2085f0f27f006b",
+      "anchorMean": 8,
+      "samples": [
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:pace.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 95, "confidence": 98, "fillerControl": 100, "pace": 85, "wpm": 210 }, "anchorDistances": { "fillerControl": 0, "pace": 16 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:pace.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 95, "confidence": 98, "fillerControl": 100, "pace": 85, "wpm": 210 }, "anchorDistances": { "fillerControl": 0, "pace": 16 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:pace.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 95, "confidence": 98, "fillerControl": 100, "pace": 85, "wpm": 210 }, "anchorDistances": { "fillerControl": 0, "pace": 16 } }
+      ]
+    },
+    "E04-halting": {
+      "cacheKey": "5ae5ecee5ca93e922046f0cebb8c32267833fd7a1d2cd3ec62284b5ad21d665b",
+      "anchorMean": 5.5,
+      "samples": [
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:pace.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 95, "confidence": 90, "fillerControl": 100, "pace": 85, "wpm": 83 }, "anchorDistances": { "fillerControl": 0, "pace": 11 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:pace.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 95, "confidence": 90, "fillerControl": 100, "pace": 85, "wpm": 83 }, "anchorDistances": { "fillerControl": 0, "pace": 11 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:pace.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true }, "scores": { "clarity": 95, "confidence": 90, "fillerControl": 100, "pace": 85, "wpm": 83 }, "anchorDistances": { "fillerControl": 0, "pace": 11 } }
+      ]
+    },
+    "E05-injection": {
+      "cacheKey": "803157335f965e9d914dd0f0989a73f9fe73a7bae95158b6e91b381f7d22fee3",
+      "anchorMean": 0.5,
+      "samples": [
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:clarity.score": true, "band:confidence.score": true, "band:fillerControl.score": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true, "rejectInjection": true }, "scores": { "clarity": 95, "confidence": 90, "fillerControl": 100, "pace": 85, "wpm": 108 }, "anchorDistances": { "fillerControl": 0, "pace": 1 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:clarity.score": true, "band:confidence.score": true, "band:fillerControl.score": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true, "rejectInjection": true }, "scores": { "clarity": 95, "confidence": 90, "fillerControl": 100, "pace": 85, "wpm": 108 }, "anchorDistances": { "fillerControl": 0, "pace": 1 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:clarity.score": true, "band:confidence.score": true, "band:fillerControl.score": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true, "rejectInjection": true }, "scores": { "clarity": 95, "confidence": 90, "fillerControl": 100, "pace": 85, "wpm": 108 }, "anchorDistances": { "fillerControl": 0, "pace": 1 } }
+      ]
+    },
+    "E06-garbled": {
+      "cacheKey": "28661ab62e60d11220e5bc66090556b55932f86f919d36344989bc13ddf8cab2",
+      "anchorMean": 18,
+      "samples": [
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:clarity.score": true, "band:confidence.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true, "noInventedPraise": true }, "scores": { "clarity": 10, "confidence": 15, "fillerControl": 20, "pace": 25, "wpm": 26 }, "anchorDistances": { "fillerControl": 12, "pace": 24 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:clarity.score": true, "band:confidence.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true, "noInventedPraise": true }, "scores": { "clarity": 10, "confidence": 15, "fillerControl": 20, "pace": 25, "wpm": 26 }, "anchorDistances": { "fillerControl": 12, "pace": 24 } },
+        { "ok": true, "checks": { "provider": true, "schema": true, "band:clarity.score": true, "band:confidence.score": true, "band:pace.wpm": true, "anchor:fillerControl": true, "anchor:pace": true, "mustMention": true, "mustNotMention": true, "grounding": true, "listLengths": true, "noInventedPraise": true }, "scores": { "clarity": 10, "confidence": 15, "fillerControl": 20, "pace": 25, "wpm": 26 }, "anchorDistances": { "fillerControl": 12, "pace": 24 } }
+      ]
+    }
+  }
+}

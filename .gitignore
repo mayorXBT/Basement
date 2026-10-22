@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*.png
+!public/assets/*.png
+public/assets/*-source.png
+*.mhtml
+.gstack/
+.agents/skills/pragmatic-programmer/
+
+.vercel
+.worktrees/
+/reports/
+.ci_job_jwt
+.gcp_cred.json

@@ -1,0 +1,14 @@
+.git
+.gitlab
+node_modules
+.env*
+eval
+chaos
+test
+scripts
+docs
+orig-index.js
+*.md
+*.test.js
+.vercel
+.worktrees

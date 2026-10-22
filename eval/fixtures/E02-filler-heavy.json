@@ -1,0 +1,19 @@
+{
+  "id": "E02-filler-heavy",
+  "provenance": "Synthetic test fixture authored for this repository on 2026-10-20; not a recording or user speech.",
+  "topic": "Comfort Zone",
+  "durationSec": 42,
+  "transcript": "Um, I think a comfort zone is actually useful at first because it gives you know a place to recover. But, uh, staying there too long can basically make every new challenge feel larger. I like the idea of choosing one small risk each week, like speaking first in a meeting or trying a route I have not used. That kind of practice is, like, a bridge: it keeps safety nearby while you actually learn that discomfort can pass. So, um, growth does not require one dramatic leap.",
+  "inputMetrics": { "pauses": 3, "speakingRatio": 72, "pitchAverage": 150, "pitchRange": 34 },
+  "labels": { "trueFillers": 8 },
+  "expect": {
+    "deterministic": { "words": 88, "fillers": 11, "wpm": 126, "local": { "fillerControl": 50, "clarity": 41, "confidence": 63, "paceScore": 94 } },
+    "llm": {
+      "bands": { "fillerControl.score": [20, 90], "pace.wpm": [95, 155] },
+      "anchorTolerance": 35,
+      "mustMentionAny": ["filler", "um", "uh", "like"],
+      "mustNotMention": ["accent", "microphone", "gender", "voice is too"],
+      "listLengths": { "strengths": [1, 3], "improvements": [1, 3] }
+    }
+  }
+}

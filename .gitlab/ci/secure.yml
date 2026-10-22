@@ -1,0 +1,83 @@
+sast:
+  stage: secure
+
+semgrep-sast:
+  stage: secure
+  allow_failure: false
+
+secret_detection:
+  stage: secure
+  allow_failure: false
+
+secure:privacy-static:
+  extends: .skip-monitor-schedule
+  stage: secure
+  image: node:22-slim
+  script:
+    - mkdir -p reports
+    - node scripts/privacy/static-rules.mjs . reports/privacy-static.json
+  artifacts:
+    when: always
+    paths:
+      - reports/privacy-static.json
+    expire_in: 14 days
+
+secure:privacy-canary:
+  extends: .skip-monitor-schedule
+  stage: secure
+  image: docker:27-cli
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_BUILDKIT: "1"
+    DOCKER_TLS_CERTDIR: "/certs"
+    CANARY_IMAGE: basement-autopilot:canary
+    CANARY_PROVIDER_IMAGE: basement-fake-providers:canary
+  before_script:
+    - apk add --no-cache nodejs
+    - docker info
+  script:
+    - mkdir -p reports
+    - docker build --tag "$CANARY_IMAGE" .
+    - docker build --file scripts/privacy/Dockerfile.fake-providers --tag "$CANARY_PROVIDER_IMAGE" scripts/privacy
+    - node scripts/privacy/runtime-canary.mjs
+  artifacts:
+    when: always
+    reports:
+      junit: reports/privacy-canary-junit.xml
+    paths:
+      - reports/privacy-canary.json
+      - reports/privacy-canary-junit.xml
+    expire_in: 14 days
+
+secure:privacy-guard:
+  stage: secure
+  image: node:22-slim
+  when: always
+  needs:
+    - job: secure:privacy-static
+      artifacts: true
+    - job: secure:privacy-canary
+      artifacts: true
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - node scripts/agents/privacy-guard.mjs prepare "$CI_MERGE_REQUEST_DIFF_BASE_SHA" reports/privacy-guard-context.json
+    - node scripts/agents/run-agent.mjs --agent privacy-guard --context reports/privacy-guard-context.json --output reports/privacy-guard-agent.md --result reports/privacy-guard-agent.json
+    - node scripts/agents/privacy-guard.mjs apply reports/privacy-guard-context.json reports/privacy-guard-agent.json reports/privacy-guard.json
+  artifacts:
+    when: always
+    paths:
+      - reports/privacy-guard-agent.md
+      - reports/privacy-guard.json
+    expire_in: 14 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - server.js
+        - api/**/*
+        - public/**/*
+        - package.json
+        - package-lock.json
+        - Dockerfile

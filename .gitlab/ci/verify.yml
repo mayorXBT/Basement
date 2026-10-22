@@ -1,0 +1,100 @@
+.node-job:
+  image: node:22-slim
+  before_script:
+    - apt-get update && apt-get install --yes --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+    - npm ci --ignore-scripts
+
+verify:unit:
+  extends: [.node-job, .skip-monitor-schedule]
+  stage: verify
+  script:
+    - mkdir -p reports
+    - node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=reports/junit.xml transcribe.test.js transcript-display.test.js test/*.test.js
+  artifacts:
+    when: always
+    reports:
+      junit: reports/junit.xml
+    paths:
+      - reports/junit.xml
+    expire_in: 14 days
+
+verify:syntax:
+  extends: [.node-job, .skip-monitor-schedule]
+  stage: verify
+  script:
+    - git ls-files -z '*.js' '*.mjs' | xargs -0 -n1 node --check
+
+verify:niche-parity:
+  extends: [.node-job, .skip-monitor-schedule]
+  stage: verify
+  script:
+    - node --test test/niche-parity.test.js
+
+verify:flow-parity:
+  extends: [.node-job, .skip-monitor-schedule]
+  stage: verify
+  script:
+    - node --test test/flow-parity.test.js
+
+verify:guard-paths:
+  extends: .node-job
+  stage: verify
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - mkdir -p reports
+    - node scripts/agents/guard-paths.mjs "$CI_MERGE_REQUEST_DIFF_BASE_SHA" reports/guard-paths.json
+  artifacts:
+    when: always
+    paths:
+      - reports/guard-paths.json
+    expire_in: 14 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+verify:speech-eval-a:
+  extends: [.node-job, .skip-monitor-schedule]
+  stage: verify
+  script:
+    - node scripts/eval/run-eval.mjs a
+  artifacts:
+    when: always
+    reports:
+      junit: reports/eval-layer-a-junit.xml
+    paths:
+      - reports/eval-layer-a.json
+      - reports/eval-layer-a-junit.xml
+    expire_in: 14 days
+
+verify:speech-eval-b:
+  extends: .node-job
+  stage: verify
+  variables:
+    EVAL_GEMINI_MODEL: gemini-3.1-flash-lite
+  script:
+    - node scripts/eval/run-eval.mjs b
+    - node scripts/eval/report.mjs reports/eval-report.json reports/eval-report.md --post
+  artifacts:
+    when: always
+    reports:
+      junit: reports/eval-layer-b-junit.xml
+    paths:
+      - reports/eval-report.json
+      - reports/eval-report.md
+      - reports/eval-next-baseline.json
+      - reports/eval-layer-b-junit.xml
+    expire_in: 14 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "nightly-eval"'
+      variables:
+        EVAL_REFRESH: "1"
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - server.js
+        - public/speech-metrics.js
+        - eval/**/*
+        - scripts/eval/**/*
+        - .gitlab/ci/verify.yml
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
