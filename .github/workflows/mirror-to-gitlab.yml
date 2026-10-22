@@ -1,0 +1,32 @@
+name: Mirror gitlab-autopilot to GitLab
+
+on:
+  push:
+    branches:
+      - gitlab-autopilot
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-gitlab-autopilot
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out complete history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push branch to GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          test -n "$GITLAB_TOKEN"
+          git -c credential.helper='!f() { test "$1" = get || exit 0; printf "%s\n" "username=oauth2" "password=$GITLAB_TOKEN"; }; f' \
+            push https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase.git \
+            HEAD:refs/heads/gitlab-autopilot
