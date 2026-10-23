@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildGoal, parseAutopilotResult } from "../scripts/agents/run-agent.mjs";
+import { buildGoal, parseAutopilotResult, spawnUnavailable } from "../scripts/agents/run-agent.mjs";
 import { validateAgentFinding, validateFinding } from "../scripts/agents/privacy-guard.mjs";
 import { redactText } from "../scripts/privacy/redact.mjs";
 
@@ -16,6 +16,12 @@ test("agent result parser accepts exactly one strict result block", () => {
   assert.deepEqual(parseAutopilotResult(output), { blockers: [], notes: [], verified: ["P1"] });
   assert.equal(parseAutopilotResult(`${output}\n${output}`), null);
   assert.equal(parseAutopilotResult("not json"), null);
+});
+
+test("agent adapter treats spawn errors as an unavailable runtime", () => {
+  assert.equal(spawnUnavailable({ error: Object.assign(new Error("missing"), { code: "ENOENT" }) }), true);
+  assert.equal(spawnUnavailable({ error: Object.assign(new Error("argument too large"), { code: "E2BIG" }) }), true);
+  assert.equal(spawnUnavailable({ status: 1, stderr: "authentication failed" }), false);
 });
 
 test("privacy findings require a safe path, line, promise, and fix", () => {
