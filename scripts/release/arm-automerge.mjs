@@ -7,10 +7,16 @@ async function main() {
   const output = path.resolve(process.argv[2] || "reports/arm-automerge.json");
   fs.mkdirSync(path.dirname(output), { recursive: true });
   if (process.env.AUTOPILOT_PAUSED === "1") { fs.writeFileSync(output, "{\"ok\":true,\"action\":\"paused\"}\n"); return; }
+  if (!process.env.AUTOPILOT_BOT_TOKEN) {
+    const report = { ok: true, action: "skipped-missing-token" };
+    fs.writeFileSync(output, `${JSON.stringify(report, null, 2)}\n`);
+    console.log("release:arm-automerge skipped: AUTOPILOT_BOT_TOKEN is not configured.");
+    return;
+  }
   const iid = process.env.CI_MERGE_REQUEST_IID;
   const sha = process.env.CI_COMMIT_SHA;
   const client = new GitLabClient();
-  if (!iid || !sha || !client.configured || !process.env.AUTOPILOT_BOT_TOKEN) throw new Error("Auto-merge requires MR context and AUTOPILOT_BOT_TOKEN");
+  if (!iid || !sha || !client.configured) throw new Error("Auto-merge requires MR context and AUTOPILOT_BOT_TOKEN");
   const response = await client.armMergeRequest(iid, sha);
   const report = { ok: true, action: "armed", iid, sha, mergeWhenPipelineSucceeds: Boolean(response.merge_when_pipeline_succeeds || response.auto_merge_enabled) };
   fs.writeFileSync(output, `${JSON.stringify(report, null, 2)}\n`);
