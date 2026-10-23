@@ -95,6 +95,7 @@ A claim with no opened, verified link is not used.
 - 23 Oct 2026: Permit a one-commit `GitLab-Auto-Merge: <iid>` marker to ask the GitHub mirror to merge an already reviewed GitLab MR after its pipeline passes. This uses GitLab's MR API, never pushes `main`, and leaves ordinary commits in supervised mode.
 - 23 Oct 2026: Treat [pipeline 2979681253](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2979681253) and merged [MR !2](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/merge_requests/2) as proof of the repaired MR gate only. They prove Guard execution and clean missing-token skips, but not the CH-01 repair loop.
 - 23 Oct 2026: Do not start or simulate CH-01 while `AUTOPILOT_BOT_TOKEN` is absent. The requested drill requires Guard to create an MR thread and Fixer to commit and push a bounded patch; job 17405453954 proves those write operations are intentionally unavailable, so C3 and C11 stay softened.
+- 23 Oct 2026: Wait for GitLab to attach the exact mirrored head pipeline before requesting merge-after-success. [Mirror run 39938225695](https://github.com/mayorXBT/Basement/actions/runs/39938225695) exposed a creation race on MR !3: the branch and MR were present, but the merge API was called one second before the MR pipeline existed.
 
 ## Verification log
 
