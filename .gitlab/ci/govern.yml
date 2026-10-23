@@ -2,8 +2,8 @@ govern:policy:
   extends: .node-job
   stage: production
   needs:
-    - job: smoke:staging
-      artifacts: true
+    - job: deploy:vercel
+      artifacts: false
     - job: release:publish
       artifacts: true
   script:
@@ -33,7 +33,7 @@ govern:evidence:
       artifacts: true
     - job: verify:speech-eval-b
       artifacts: true
-    - job: smoke:candidate
+    - job: deploy:vercel
       artifacts: false
   script:
     - mkdir -p evidence reports

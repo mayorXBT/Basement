@@ -1,55 +1,15 @@
 monitor:synthetic:
-  extends: .gcp-deploy
+  extends: .node-job
   stage: monitor
+  variables:
+    VERCEL_PRODUCTION_URL: https://basement.cefo.dev
   script:
     - mkdir -p reports
-    - export PRODUCTION_URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_PROD" --project="$GCP_PROJECT_ID" --region="$GCP_REGION" --format='value(status.url)')"
-    - test -n "$PRODUCTION_URL"
-    - export CLOUD_RUN_ID_TOKEN="$(gcloud auth print-identity-token --audiences="$PRODUCTION_URL")"
-    - node scripts/monitor/synthetic.mjs "$PRODUCTION_URL" reports/monitor-synthetic.json
+    - node scripts/monitor/synthetic.mjs "$VERCEL_PRODUCTION_URL" reports/monitor-synthetic.json
   artifacts:
     when: always
     paths:
       - reports/monitor-synthetic.json
     expire_in: 30 days
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
-
-monitor:rollback:
-  extends: .gcp-deploy
-  stage: monitor
-  needs:
-    - job: monitor:synthetic
-      artifacts: true
-  script:
-    - mkdir -p reports
-    - node scripts/monitor/rollback-if-needed.mjs reports/monitor-synthetic.json reports/monitor-rollback.json
-  artifacts:
-    when: always
-    paths:
-      - reports/monitor-rollback.json
-    expire_in: 30 days
-  when: always
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
-
-monitor:incident:
-  extends: .gcp-deploy
-  stage: monitor
-  needs:
-    - job: monitor:synthetic
-      artifacts: true
-    - job: monitor:rollback
-      artifacts: true
-  script:
-    - mkdir -p reports
-    - gcloud run revisions list --service="$CLOUD_RUN_SERVICE_PROD" --project="$GCP_PROJECT_ID" --region="$GCP_REGION" --limit=10 --format='value(metadata.name,status.conditions[0].status)' > reports/monitor-revisions.txt
-    - node scripts/monitor/incident.mjs reports/monitor-synthetic.json reports/monitor-rollback.json reports/monitor-incident.json
-  artifacts:
-    when: always
-    paths:
-      - reports/monitor-incident.json
-    expire_in: 30 days
-  when: always
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'

@@ -5,7 +5,7 @@ import { evaluatePolicy } from "../scripts/evidence/policy.mjs";
 const currentNames = [
   "verify:unit", "verify:syntax", "verify:niche-parity", "verify:speech-eval-a", "verify:speech-eval-b",
   "secure:privacy-static", "secure:privacy-canary", "secret_detection", "semgrep-sast", "dependency-scanning",
-  "package:build", "release:publish", "smoke:staging"
+  "package:build", "release:publish", "deploy:vercel"
 ];
 const mrNames = ["verify:guard-paths", "verify:flow-parity", "secure:privacy-guard"];
 const jobs = (names) => names.map((name, index) => ({ id: index + 1, name, status: "success" }));

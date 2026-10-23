@@ -8,8 +8,7 @@ const root = path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.ur
 
 function headers(contentType) {
   return {
-    ...(contentType ? { "content-type": contentType } : {}),
-    ...(process.env.CLOUD_RUN_ID_TOKEN ? { authorization: `Bearer ${process.env.CLOUD_RUN_ID_TOKEN}` } : {})
+    ...(contentType ? { "content-type": contentType } : {})
   };
 }
 

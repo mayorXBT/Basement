@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { runSynthetic } from "../scripts/monitor/synthetic.mjs";
-import { incidentDescription } from "../scripts/monitor/incident.mjs";
-import { rollbackIfNeeded } from "../scripts/monitor/rollback-if-needed.mjs";
 
 const securityHeaders = {
   "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
@@ -44,26 +42,4 @@ test("disclosed monitor fire drill fails after real checks", async () => {
   } finally {
     if (original === undefined) delete process.env.MONITOR_FIRE_DRILL; else process.env.MONITOR_FIRE_DRILL = original;
   }
-});
-
-test("rollback is deterministic and only runs after a failed synthetic", () => {
-  let calls = 0;
-  const healthy = rollbackIfNeeded({ ok: true, attempts: 1 }, { service: "basement", execFile: () => { calls += 1; } });
-  assert.equal(healthy.action, "not-needed");
-  const failed = rollbackIfNeeded({ ok: false, attempts: 2, fireDrill: true }, { service: "basement", execFile: (command, args) => {
-    calls += 1;
-    assert.equal(command, "bash");
-    assert.deepEqual(args, ["scripts/deploy/rollback.sh", "basement"]);
-    return "Rolled basement back to basement-00001.\n";
-  } });
-  assert.equal(calls, 1);
-  assert.equal(failed.action, "rolled-back");
-  assert.equal(failed.fireDrill, true);
-});
-
-test("incident template discloses a fire drill and redacts speech fields", () => {
-  const body = incidentDescription({ pipelineId: "77", pipelineUrl: "https://gitlab.example/pipelines/77", synthetic: { attempts: 2, fireDrill: true, error: "transcript=\"private words\" failed" }, rollback: { action: "rolled-back" }, revisions: "revision-a True" });
-  assert.match(body, /Fire drill: yes/);
-  assert.match(body, /rolled-back/);
-  assert.doesNotMatch(body, /private words/);
 });

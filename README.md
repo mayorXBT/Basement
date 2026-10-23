@@ -2,7 +2,7 @@
 
 Basement is an anonymous impromptu speaking practice app. Spin a topic, speak for a minute, and get delivery-focused coaching without creating an account.
 
-The existing Vercel deployment at [basement.cefo.dev](https://basement.cefo.dev) remains the before-state and fallback. The Autopilot branch now has a [green GitLab pipeline](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2978492394) for Verify, Secure, and Package; Duo, release, and Cloud Run run evidence remain pending. See [PROGRESS.md](PROGRESS.md) before repeating any autonomy claim.
+Basement runs on Vercel at [basement.cefo.dev](https://basement.cefo.dev). The Autopilot branch has a [green GitLab pipeline](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2979681253) for Verify, Secure, and Package; the production stage checks the existing Vercel deployment and never requires Google Cloud variables. See [PROGRESS.md](PROGRESS.md) before repeating any autonomy claim.
 
 ## Basement Autopilot in one picture
 
@@ -15,16 +15,14 @@ flowchart LR
     MR --> S[Secure: scans and privacy canary]
     V --> R[Release: merge, receipt, SBOM]
     S --> R
-    R --> C[Configure: Cloud Run staging]
+    R --> C[Configure: Vercel production target]
     C --> G[Govern: deterministic policy]
-    G --> P[Production candidate and smoke]
+    G --> P[Vercel production check]
     P --> E[Evidence comment and issue close]
     P --> M[Monitor: live probes]
-    M -->|two failures| RB[Rollback to last-good]
-    RB --> IN[Privacy-safe incident]
 ```
 
-Agents plan, change code, fix bounded failures, and explain results. Ordinary deterministic jobs own every shipping gate. The default is supervised; production becomes automatic only when the owner separately enables hands-off mode and approves the cloud cost gate.
+Agents plan, change code, fix bounded failures, and explain results. Ordinary deterministic jobs own every shipping gate. The default is supervised, and GitLab records the existing Vercel production URL without provisioning another hosting platform.
 
 ## The nine stages
 
@@ -36,8 +34,8 @@ Agents plan, change code, fix bounded failures, and explain results. Ordinary de
 | Secure | GitLab scans, privacy rules, canary, and Guard | [Passing privacy canary](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17397617390) |
 | Package | Immutable container image and digest | [Passing registry push](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17397617391) |
 | Release | Version, notes, receipt, ledger, SBOM, and eval report | Pending release URL |
-| Configure | WIF-backed staging and production deployment | Pending environment URL |
-| Monitor | Live synthetic checks, rollback, and incident | Pending scheduled job URL |
+| Configure | Existing Vercel production environment and smoke check | Pending Vercel job URL |
+| Monitor | Scheduled live synthetic checks against Vercel | Pending scheduled job URL |
 | Govern | Policy, evidence comment, and issue closure | Pending evidence URL |
 
 The detailed map links every source implementation and distinguishes source from run evidence in [docs/STAGES.md](docs/STAGES.md). The honest runtime count is currently 3/9 stages: Verify, Secure, and Package.
@@ -218,9 +216,7 @@ Before a public launch, rotate any API keys that have been used during developme
 
 ## Deployment
 
-The Autopilot deployment path uses private-by-default Cloud Run services in `europe-west1`, immutable Artifact Registry digests, Secret Manager, and GitLab OIDC Workload Identity Federation. The exact owner-run setup, cost warning, hands-off controls, and monitor schedule are in [deploy/cloudrun/README.md](deploy/cloudrun/README.md). Do not run those resource-creating commands without billing approval.
-
-The existing Vercel path through `api/index.js` and `vercel.json` remains untouched as the before-state and non-GCP fallback. Vercel runs the Express app as a Node function and serves the public UI through the same app.
+Production remains on Vercel through the existing `api/index.js` and `vercel.json`. GitLab's `deploy:vercel` job points the production environment at [basement.cefo.dev](https://basement.cefo.dev) and runs a read-only health, headers, and cookie check. It does not provision or deploy infrastructure and requires no Google Cloud variables.
 
 Configure these Vercel environment variables for Preview and Production:
 
@@ -232,7 +228,7 @@ Configure these Vercel environment variables for Preview and Production:
 - `DEEPGRAM_MODEL`
 - `GROQ_TRANSCRIPTION_MODEL`
 
-The custom domain is intended to be `basement.cefo.dev`.
+The production custom domain is `basement.cefo.dev`.
 
 ## Credits and licence
 

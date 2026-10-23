@@ -12,5 +12,3 @@ public/assets/*-source.png
 .vercel
 .worktrees/
 /reports/
-.ci_job_jwt
-.gcp_cred.json

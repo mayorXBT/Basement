@@ -31,7 +31,7 @@ Use the additional commands documented by each milestone in `PROGRESS.md` and th
 ## Privacy and secrets
 
 - Never commit credentials, tokens, audio, user transcripts, request bodies, or a local environment file.
-- Secrets belong only in masked GitLab CI/CD variables, Google Secret Manager, or an untracked `.env.local`.
+- Secrets belong only in masked GitLab CI/CD variables, Vercel environment variables, or an untracked `.env.local`.
 - Never put provider keys in URLs, client code, responses, comments, logs, test output, or evidence artifacts.
 - Do not introduce analytics, accounts, cookies, new storage, or new outbound destinations without an explicit product decision and matching privacy checks.
 - Deterministic privacy, security, and evaluation gates decide whether a change may ship. An agent may explain or add a blocker but may not waive a failing gate.

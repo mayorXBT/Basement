@@ -19,9 +19,7 @@ stages:
   - verify
   - secure
   - package
-  - review
   - release
-  - staging
   - production
   - monitor
   - govern
