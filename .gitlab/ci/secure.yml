@@ -55,6 +55,8 @@ secure:privacy-guard:
   stage: secure
   image: node:22-slim
   when: always
+  before_script:
+    - apt-get update && apt-get install --yes --no-install-recommends git && rm -rf /var/lib/apt/lists/*
   needs:
     - job: secure:privacy-static
       artifacts: true
@@ -81,3 +83,4 @@ secure:privacy-guard:
         - package.json
         - package-lock.json
         - Dockerfile
+        - .gitlab/ci/secure.yml

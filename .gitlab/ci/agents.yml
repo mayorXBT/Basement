@@ -4,8 +4,14 @@ fix:autopilot:
   variables:
     GIT_DEPTH: "0"
   before_script:
+    - apt-get update && apt-get install --yes --no-install-recommends git && rm -rf /var/lib/apt/lists/*
     - npm ci --ignore-scripts
   script:
+    - |
+      if [ -z "${AUTOPILOT_BOT_TOKEN:-}" ]; then
+        echo "fix:autopilot skipped: AUTOPILOT_BOT_TOKEN is not configured."
+        exit 0
+      fi
     - mkdir -p reports
     - node scripts/agents/fixer.mjs
   artifacts:
@@ -14,6 +20,8 @@ fix:autopilot:
       - reports/fixer.json
       - reports/fixer-agent.md
     expire_in: 14 days
-  when: on_failure
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $AUTOPILOT_PAUSED != "1" && ($AUTOPILOT_BOT_TOKEN == null || $AUTOPILOT_BOT_TOKEN == "")'
+      when: always
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $AUTOPILOT_PAUSED != "1"'
+      when: on_failure

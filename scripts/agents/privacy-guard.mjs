@@ -108,7 +108,7 @@ async function apply(contextPath, agentResultPath, reportPath) {
   const notes = Array.isArray(result.notes) ? result.notes.filter(validAgentFinding) : [];
   const invalidFindings = [...(Array.isArray(result.blockers) ? result.blockers : []), ...(Array.isArray(result.notes) ? result.notes : [])].length - agentBlockers.length - notes.length;
   const blockers = [...deterministicFindings(context), ...agentBlockers];
-  const client = new GitLabClient();
+  const client = new GitLabClient({ token: process.env.AUTOPILOT_BOT_TOKEN || process.env.GITLAB_TOKEN || null });
   const iid = process.env.CI_MERGE_REQUEST_IID;
   let posted = 0;
   let resolved = 0;

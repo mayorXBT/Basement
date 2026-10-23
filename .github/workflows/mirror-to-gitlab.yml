@@ -30,3 +30,53 @@ jobs:
           git -c credential.helper='!f() { test "$1" = get || exit 0; printf "%s\n" "username=oauth2" "password=$GITLAB_TOKEN"; }; f' \
             push https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase.git \
             HEAD:refs/heads/gitlab-autopilot
+
+      - name: Ensure GitLab merge request is open
+        if: github.event_name == 'push'
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          api="https://gitlab.com/api/v4/projects/87881108/merge_requests"
+          response="$RUNNER_TEMP/gitlab-merge-requests.json"
+          curl --fail --silent --show-error \
+            --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            "$api?state=opened&source_branch=gitlab-autopilot&target_branch=main" \
+            --output "$response"
+
+          if [ "$(node -e 'const fs=require("fs");const rows=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));process.stdout.write(String(rows.length))' "$response")" != "0" ]; then
+            node -e 'const fs=require("fs");const rows=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));console.log(`GitLab merge request already open: ${rows[0].web_url}`)' "$response"
+            exit 0
+          fi
+
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            --data-urlencode "source_branch=gitlab-autopilot" \
+            --data-urlencode "target_branch=main" \
+            --data-urlencode "title=Make agent jobs reliable without bot credentials" \
+            --data-urlencode "remove_source_branch=false" \
+            "$api" \
+            --output "$response"
+          node -e 'const fs=require("fs");const row=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));console.log(`Opened GitLab merge request: ${row.web_url}`)' "$response"
+
+      - name: Arm explicitly requested GitLab merge
+        if: github.event_name == 'push'
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          iid="$(git log -1 --pretty=%B | sed -n 's/^GitLab-Auto-Merge: \([0-9][0-9]*\)$/\1/p' | tail -n 1)"
+          if [ -z "$iid" ]; then
+            echo "No GitLab merge was requested by this commit."
+            exit 0
+          fi
+
+          response="$RUNNER_TEMP/gitlab-merge.json"
+          curl --fail --silent --show-error \
+            --request PUT \
+            --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            --data-urlencode "auto_merge=true" \
+            --data-urlencode "should_remove_source_branch=false" \
+            --data-urlencode "sha=$(git rev-parse HEAD)" \
+            "https://gitlab.com/api/v4/projects/87881108/merge_requests/$iid/merge" \
+            --output "$response"
+          node -e 'const fs=require("fs");const row=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));console.log(`GitLab merge requested: ${row.web_url}`)' "$response"
