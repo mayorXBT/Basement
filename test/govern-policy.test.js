@@ -22,3 +22,27 @@ test("paused mode cannot authorize deployment", () => {
   assert.equal(report.ok, false);
   assert.equal(report.paused, true);
 });
+
+test("policy fails when the source merge request pipeline did not pass", () => {
+  const ok = evaluatePolicy({ currentJobs: jobs(currentNames), mergeRequestJobs: jobs(mrNames), sourcePipelineStatus: "success" });
+  assert.equal(ok.ok, true);
+  for (const status of ["failed", "running", null]) {
+    const report = evaluatePolicy({ currentJobs: jobs(currentNames), mergeRequestJobs: jobs(mrNames), sourcePipelineStatus: status });
+    assert.equal(report.ok, false);
+    assert.deepEqual(report.failing, [{ name: "source merge request pipeline", status: status || "unknown" }]);
+  }
+});
+
+test("every job the policy requires from the source MR pipeline runs on every MR", async () => {
+  const fs = await import("node:fs");
+  const { requiredMergeRequest } = await import("../scripts/evidence/policy.mjs");
+  const config = ["verify", "secure"].map((name) => fs.readFileSync(new URL(`../.gitlab/ci/${name}.yml`, import.meta.url), "utf8")).join("\n");
+  for (const name of requiredMergeRequest) {
+    const start = config.indexOf(`\n${name}:\n`);
+    assert.notEqual(start, -1, `${name} is defined`);
+    const rest = config.slice(start + name.length + 3);
+    const block = rest.slice(0, rest.search(/\n[^\s#][^\n]*:\n|$/));
+    assert.doesNotMatch(block, /^\s+changes:/m, `${name} must not be skipped by rules:changes`);
+    assert.doesNotMatch(block, /when:\s*never[\s\S]*merge_request_event|merge_request_event[^\n]*\n\s+when:\s*(never|manual)/, `${name} runs on MR pipelines`);
+  }
+});

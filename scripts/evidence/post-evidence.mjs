@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { GitLabClient } from "../agents/gitlab.mjs";
 import { verifyLedger } from "./verify-ledger.mjs";
+import { selectSourceMergeRequest } from "./source-merge-request.mjs";
 
 function stageLink(entries, stages) {
   const entry = entries.find((item) => stages.includes(item.stage) && item.status === "success" && item.job_url);
@@ -43,7 +44,7 @@ async function main() {
   const client = new GitLabClient();
   if (!client.configured || !process.env.AUTOPILOT_BOT_TOKEN) throw new Error("Evidence posting requires AUTOPILOT_BOT_TOKEN");
   const mergeRequests = await client.listCommitMergeRequests(process.env.CI_COMMIT_SHA);
-  const mergeRequest = mergeRequests.find((item) => item.state === "merged") || mergeRequests[0];
+  const mergeRequest = selectSourceMergeRequest(mergeRequests, process.env.CI_COMMIT_SHA);
   if (!mergeRequest) throw new Error("No merge request is associated with the release commit");
   const issueIid = mergeRequest.description?.match(/(?:Closes|Fixes)\s+#(\d+)/i)?.[1];
   if (!issueIid) throw new Error("Merge request does not identify an issue with Closes #<iid>");
