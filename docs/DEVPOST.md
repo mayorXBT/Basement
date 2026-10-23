@@ -51,7 +51,7 @@ The first challenge was keeping agents away from their own guardrails. Builder a
 
 The second challenge was making AI evaluation stable enough to explain. Layer B runs three times, accepts a two-of-three majority, compares anchor scores with a protected baseline, and uses a redacted cache. The originally planned Gemini model was retired for new users, so the smallest live experiment selected `gemini-3.1-flash-lite` and recorded that deviation.
 
-The remaining challenge is default-branch and deployment evidence. GitHub Actions can mirror the source branch into the showcase project, but this build environment has no GitLab API token or Duo CLI, and cloud billing is an explicit owner approval gate. I kept the remaining milestones open instead of replacing real flow, release, and deployment links with source-only claims.
+The remaining challenge is agent-write and deployment evidence. The repaired branch passed a full merge-request pipeline and landed on the showcase project's default branch through MR !2. The GitLab pipeline still has no `AUTOPILOT_BOT_TOKEN` or Duo CLI, and cloud billing is an explicit owner approval gate. I kept the CH-01 drill and remaining milestones open instead of replacing a real Guard thread, Fixer commit, release, or deployment link with source-only claims.
 
 ## Accomplishments
 
@@ -60,6 +60,7 @@ The remaining challenge is default-branch and deployment evidence. GitHub Action
 - The app now keeps Gemini keys in headers, shares one speech-metrics implementation, checks niche parity, and handles trusted proxy rate-limit keys behind Cloud Run configuration.
 - Releases are designed to carry a privacy receipt, a tamper-evident evidence ledger, a CycloneDX SBOM, and the coaching report.
 - Monitor recovery is deterministic and unit-tested before the optional Incident agent writes any narrative.
+- A repaired 18-job MR pipeline ran Privacy Guard successfully, skipped credential-dependent Fixer work explicitly, and merged only after the pipeline passed.
 
 ## What I learned
 
@@ -69,7 +70,7 @@ I also learned to separate implementation evidence from run evidence. A correct-
 
 ## What's next
 
-First, merge the mirrored branch into the hackathon project's default branch, validate the flow in AI Catalog, and complete one supervised issue-to-production run. After the owner approves billing, verify WIF and Cloud Run, run the disclosed rollback drill, and capture the real evidence links. Later, the privacy gates and receipt format could become a reusable GitLab CI component for other small AI applications.
+First, add the masked protected bot credential, validate the flow in AI Catalog, and complete the CH-01 supervised issue-to-MR repair run. After the owner approves billing, verify WIF and Cloud Run, run the disclosed rollback drill, and capture the real evidence links. Later, the privacy gates and receipt format could become a reusable GitLab CI component for other small AI applications.
 
 ## Built with
 
@@ -79,10 +80,24 @@ GitLab, GitLab Duo Agent Platform, GitLab CI/CD, Node.js, Express, Docker, Googl
 
 - GitLab repository: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase
 - Green branch pipeline: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2978492394
+- Merged pipeline-repair MR: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/merge_requests/2
+- Green MR pipeline: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2979681253
+- Passing Privacy Guard job: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17405453948
+- Clean missing-token Fixer skip: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17405453954
 - Live Cloud Run application: PENDING
 - Original GitHub repository: https://github.com/mayorXBT/Basement
 - Autopilot source branch: https://github.com/mayorXBT/Basement/tree/gitlab-autopilot
 - Demo video: PENDING
+
+## CH-01 supervised drill evidence
+
+`AUTOPILOT_BOT_TOKEN` is not configured, so the writable agent loop has not run. C3 and C11 remain softened.
+
+- CH-01 issue: PENDING
+- Guard MR thread: PENDING
+- Fixer commit: PENDING
+- Repair MR: PENDING
+- Green repair pipeline: PENDING
 
 ## Submission classification
 
