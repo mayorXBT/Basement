@@ -412,7 +412,6 @@ app.post("/api/transcribe", providerRateLimit, express.raw({ type: ["audio/*", "
 app.post("/api/analyze", providerRateLimit, async (req, res) => {
   const payload = validateAnalyzePayload(req.body);
   if (!payload) return res.status(400).json({ error: "Malformed analysis payload." });
-  console.log("analyze transcript", payload.transcript);
   const analysis = await analyzeWithGemini(payload);
   res.json({ analysis, source: analysis ? "gemini" : "local-fallback" });
 });
