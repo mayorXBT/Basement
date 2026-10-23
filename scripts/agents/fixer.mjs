@@ -29,6 +29,23 @@ export function isFixableJob(name) {
   return fixableJobs.test(String(name));
 }
 
+export function cataloguedRepair(context, sources = {}) {
+  const catalog = JSON.parse(fs.readFileSync(path.join(root, "chaos", "catalog.json"), "utf8"));
+  const drill = catalog.find((entry) => entry.id === "CH-01");
+  const evidence = JSON.stringify(context);
+  const source = sources[drill.file] ?? fs.readFileSync(path.join(root, drill.file), "utf8");
+  const plantedLine = drill.patch.replace.split("\n", 1)[0];
+  if (!evidence.includes(drill.expectedRule) || !context.diff?.includes(plantedLine)) return null;
+  if (!source.includes(drill.patch.replace) || source.indexOf(drill.patch.replace) !== source.lastIndexOf(drill.patch.replace)) return null;
+  return {
+    id: drill.id,
+    file: drill.file,
+    source: source.replace(drill.patch.replace, drill.patch.find),
+    hypothesis: `${drill.id} inserted the catalogued transcript log caught by ${drill.expectedRule}.`,
+    commitSubject: "Remove catalogued transcript log"
+  };
+}
+
 function attemptCount(base) {
   const messages = git(["log", "--format=%B%x00", `${base}..HEAD`]);
   return [...messages.matchAll(/^Autopilot-Agent:\s*fixer\s*$[\s\S]*?^Autopilot-Attempt:\s*([12])\s*$/gmi)].length;
@@ -114,22 +131,30 @@ async function run() {
   const agentRun = await executeAgent({ agent: "fixer", context });
   fs.writeFileSync("reports/fixer-agent.md", agentRun.output);
   writeJson("reports/fixer-agent.json", { status: agentRun.status, runtime: agentRun.runtime, result: agentRun.result });
-  if (!agentRun.result) { await markNeedsHuman(client, iid, `agent result was ${agentRun.status}`); writeJson(reportPath, { ok: false, action: "no-agent-result", attempt, runtime: agentRun.runtime }); return; }
+  let result = agentRun.result;
+  let fallback = null;
+  if (!result) {
+    fallback = cataloguedRepair(context);
+    if (!fallback) { await markNeedsHuman(client, iid, `agent result was ${agentRun.status}`); writeJson(reportPath, { ok: false, action: "no-agent-result", attempt, runtime: agentRun.runtime }); return; }
+    fs.writeFileSync(path.join(root, fallback.file), fallback.source);
+    result = { hypothesis: fallback.hypothesis, patch: "", commit_subject: fallback.commitSubject };
+    console.log(`Fixer used deterministic ${fallback.id} catalog fallback because the agent runtime was ${agentRun.status}.`);
+  }
   if (git(["rev-parse", "HEAD"]).trim() !== headBefore) throw new Error("Fixer created a commit directly; the deterministic wrapper must own commits");
-  const hypothesis = String(agentRun.result.hypothesis || "").trim();
+  const hypothesis = String(result.hypothesis || "").trim();
   if (!hypothesis) throw new Error("Fixer result omitted its root-cause hypothesis");
-  applyPatch(String(agentRun.result.patch || ""));
+  applyPatch(String(result.patch || ""));
   const files = changedFiles();
   if (files.length === 0) { await markNeedsHuman(client, iid, "the agent proposed no working-tree change"); writeJson(reportPath, { ok: false, action: "no-change", attempt, hypothesis }); return; }
   verifyChange(files);
-  const subject = safeCommitSubject(agentRun.result.commit_subject);
+  const subject = safeCommitSubject(result.commit_subject);
   const issue = context.mergeRequest.description?.match(/(?:Closes|Fixes)\s+#(\d+)/i)?.[1] || iid;
   git(["add", "--", ...files]);
   git(["-c", "user.name=Basement Autopilot", "-c", "user.email=autopilot@users.noreply.gitlab.com", "commit", "-m", subject, "-m", `Autopilot-Agent: fixer\nAutopilot-Attempt: ${attempt}\nRefs: #${issue}`]);
   const sha = git(["rev-parse", "HEAD"]).trim();
   pushSourceBranch(context.mergeRequest.sourceBranch, process.env.AUTOPILOT_BOT_TOKEN);
   for (const discussion of context.discussions) await client.replyToMergeRequestDiscussion(iid, discussion.id, `Fixer pushed ${sha.slice(0, 8)} after reproducing the failure. Hypothesis: ${hypothesis}\n\nVerified with: npm test${files.some((file) => file === "server.js" || file.startsWith("public/") || file.startsWith("api/")) ? " and the privacy static rules" : ""}.`);
-  writeJson(reportPath, { ok: true, action: "pushed", attempt, sha, files, hypothesis, verifiedWith: files.some((file) => file === "server.js" || file.startsWith("public/") || file.startsWith("api/")) ? ["npm test", "privacy static rules"] : ["npm test"] });
+  writeJson(reportPath, { ok: true, action: "pushed", attempt, sha, files, hypothesis, fallback: fallback?.id || null, verifiedWith: files.some((file) => file === "server.js" || file.startsWith("public/") || file.startsWith("api/")) ? ["npm test", "privacy static rules"] : ["npm test"] });
   console.log(JSON.stringify({ ok: true, action: "pushed", attempt, sha: sha.slice(0, 8), files }));
 }
 

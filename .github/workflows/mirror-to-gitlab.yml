@@ -31,6 +31,45 @@ jobs:
             push https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase.git \
             HEAD:refs/heads/gitlab-autopilot
 
+      - name: Open disclosed CH-01 drill issue
+        if: github.event_name == 'push'
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          drill="$(git log -1 --pretty=%B | sed -n 's/^GitLab-Drill: \(CH-[0-9][0-9]*\)$/\1/p' | tail -n 1)"
+          if [ "$drill" != "CH-01" ]; then
+            echo "No CH-01 drill was requested by this commit."
+            exit 0
+          fi
+
+          title="CH-01 supervised privacy drill"
+          api="https://gitlab.com/api/v4/projects/87881108/issues"
+          response="$RUNNER_TEMP/gitlab-drill-issue.json"
+          curl --fail --silent --show-error \
+            --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            --get \
+            --data-urlencode "scope=all" \
+            --data-urlencode "state=opened" \
+            --data-urlencode "search=$title" \
+            "$api" \
+            --output "$response"
+          issue_iid="$(node -e 'const fs=require("fs");const title=process.argv[2];const row=JSON.parse(fs.readFileSync(process.argv[1],"utf8")).find((item)=>item.title===title);if(row)process.stdout.write(String(row.iid))' "$response" "$title")"
+
+          if [ -z "$issue_iid" ]; then
+            curl --fail --silent --show-error \
+              --request POST \
+              --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+              --data-urlencode "title=$title" \
+              --data-urlencode "description=Disclosed chaos drill from chaos/catalog.json. Plant CH-01 (one transcript log), require PG-LOG-01 and Privacy Guard to block it, then allow only the bounded Fixer to remove it. No real speech or secrets are used." \
+              "$api" \
+              --output "$response"
+            issue_iid="$(node -e 'const fs=require("fs");process.stdout.write(String(JSON.parse(fs.readFileSync(process.argv[1],"utf8")).iid))' "$response")"
+          fi
+
+          issue_url="https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/issues/$issue_iid"
+          echo "DRILL_ISSUE_IID=$issue_iid" >> "$GITHUB_ENV"
+          echo "GitLab drill issue: $issue_url"
+
       - name: Ensure GitLab merge request is open
         if: github.event_name == 'push'
         env:
@@ -48,13 +87,24 @@ jobs:
             exit 0
           fi
 
-          curl --fail --silent --show-error \
-            --request POST \
-            --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-            --data-urlencode "source_branch=gitlab-autopilot" \
-            --data-urlencode "target_branch=main" \
-            --data-urlencode "title=Make agent jobs reliable without bot credentials" \
-            --data-urlencode "remove_source_branch=false" \
+          title="$(git log -1 --pretty=%s)"
+          if [ -n "${DRILL_ISSUE_IID:-}" ]; then
+            title="CH-01 supervised privacy repair"
+          fi
+          curl_args=(
+            --fail --silent --show-error
+            --request POST
+            --header "PRIVATE-TOKEN: $GITLAB_TOKEN"
+            --data-urlencode "source_branch=gitlab-autopilot"
+            --data-urlencode "target_branch=main"
+            --data-urlencode "title=$title"
+            --data-urlencode "remove_source_branch=false"
+          )
+          if [ -n "${DRILL_ISSUE_IID:-}" ]; then
+            description="$(printf 'Closes #%s\n\nDisclosed chaos drill: CH-01 from chaos/catalog.json.' "$DRILL_ISSUE_IID")"
+            curl_args+=(--data-urlencode "description=$description")
+          fi
+          curl "${curl_args[@]}" \
             "$api" \
             --output "$response"
           node -e 'const fs=require("fs");const row=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));console.log(`Opened GitLab merge request: ${row.web_url}`)' "$response"
