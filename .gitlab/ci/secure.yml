@@ -21,6 +21,10 @@ secure:privacy-static:
     paths:
       - reports/privacy-static.json
     expire_in: 14 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
+    - when: always
 
 secure:privacy-canary:
   extends: .skip-monitor-schedule
@@ -50,6 +54,10 @@ secure:privacy-canary:
       - reports/privacy-canary.json
       - reports/privacy-canary-junit.xml
     expire_in: 14 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+      when: never
+    - when: always
 
 secure:privacy-guard:
   stage: secure
