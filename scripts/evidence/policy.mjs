@@ -9,7 +9,7 @@ import { verifyLedger } from "./verify-ledger.mjs";
 const requiredCurrent = [
   "verify:unit", "verify:syntax", "verify:niche-parity", "verify:speech-eval-a", "verify:speech-eval-b",
   "secure:privacy-static", "secure:privacy-canary", "secret_detection", "semgrep-sast", "dependency-scanning",
-  "package:build", "release:publish", "smoke:staging"
+  "package:build", "release:publish", "deploy:vercel"
 ];
 const requiredMergeRequest = ["verify:guard-paths", "verify:flow-parity", "secure:privacy-guard"];
 
