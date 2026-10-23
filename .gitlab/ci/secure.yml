@@ -83,3 +83,4 @@ secure:privacy-guard:
         - package.json
         - package-lock.json
         - Dockerfile
+        - .gitlab/ci/secure.yml

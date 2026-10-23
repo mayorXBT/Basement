@@ -20,6 +20,8 @@ fix:autopilot:
       - reports/fixer.json
       - reports/fixer-agent.md
     expire_in: 14 days
-  when: on_failure
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $AUTOPILOT_PAUSED != "1" && ($AUTOPILOT_BOT_TOKEN == null || $AUTOPILOT_BOT_TOKEN == "")'
+      when: always
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $AUTOPILOT_PAUSED != "1"'
+      when: on_failure
