@@ -92,6 +92,7 @@ A claim with no opened, verified link is not used.
 - 23 Oct 2026: Let the GitHub mirror idempotently open the `gitlab-autopilot` to `main` MR through GitLab's API because the GitLab credential exists only as a GitHub Actions secret. The token is sent only in a request header and is never placed in a remote URL or printed.
 - 23 Oct 2026: Do not treat `CI_JOB_TOKEN` as a writable Privacy Guard credential. MR job 17405270162 proved GitLab returns 401 for its discussion request; without `AUTOPILOT_BOT_TOKEN` or `GITLAB_TOKEN`, deterministic Guard checks now run and report `gitlabConfigured: false` instead of calling the API.
 - 23 Oct 2026: Make `release:arm-automerge` a successful, reported no-op when `AUTOPILOT_BOT_TOKEN` is absent. MR job 17405327486 exposed the same missing-credential assumption after Guard was repaired; supervised pipelines must stay green while merging remains a human action.
+- 23 Oct 2026: Permit a one-commit `GitLab-Auto-Merge: <iid>` marker to ask the GitHub mirror to merge an already reviewed GitLab MR after its pipeline passes. This uses GitLab's MR API, never pushes `main`, and leaves ordinary commits in supervised mode.
 
 ## Verification log
 
