@@ -87,6 +87,9 @@ A claim with no opened, verified link is not used.
 - 22 Oct 2026: Preserve imported GitLab security jobs instead of replacing their `extends` definitions. Monitor schedules now use the templates' `SAST_DISABLED`, `SECRET_DETECTION_DISABLED`, and `DEPENDENCY_SCANNING_DISABLED` variables, which fixed the pre-job `script` validation failures while retaining schedule isolation.
 - 22 Oct 2026: Install Git in the shared `node:22-slim` verification setup because the image lacks it and the syntax command plus policy tests invoke the binary. The subsequent showcase pipeline passed all verify jobs.
 - 22 Oct 2026: Keep M1 open even though [pipeline 2978492394](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2978492394) and its container push passed. The project default branch is still `main`, where `LICENSE` and `.gitlab/duo/agent-config.yml` are absent; a GitLab MR must land the mirrored branch before the MIT badge and Duo default-branch configuration can be claimed.
+- 23 Oct 2026: Install Git explicitly in the Privacy Guard and Fixer `node:22-slim` jobs because MR pipeline 2978519026 proved that GitLab's checkout helper does not make the binary available inside the job image.
+- 23 Oct 2026: Treat a missing `AUTOPILOT_BOT_TOKEN` as an explicit successful Fixer no-op with a clear log message. The token remains owner-supplied and no credential is added to source; a real automated repair drill stays blocked until the protected variable exists.
+- 23 Oct 2026: Let the GitHub mirror idempotently open the `gitlab-autopilot` to `main` MR through GitLab's API because the GitLab credential exists only as a GitHub Actions secret. The token is sent only in a request header and is never placed in a remote URL or printed.
 
 ## Verification log
 
