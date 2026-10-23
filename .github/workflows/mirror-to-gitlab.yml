@@ -71,12 +71,31 @@ jobs:
           fi
 
           response="$RUNNER_TEMP/gitlab-merge.json"
+          mr_api="https://gitlab.com/api/v4/projects/87881108/merge_requests/$iid"
+          head_sha="$(git rev-parse HEAD)"
+          for attempt in $(seq 1 24); do
+            curl --fail --silent --show-error \
+              --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+              "$mr_api" \
+              --output "$response"
+            ready="$(node -e 'const fs=require("fs");const row=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));process.stdout.write(String(row.sha===process.argv[2] && Boolean(row.head_pipeline?.id)))' "$response" "$head_sha")"
+            if [ "$ready" = "true" ]; then
+              break
+            fi
+            if [ "$attempt" = "24" ]; then
+              echo "GitLab MR !$iid did not expose a pipeline for the mirrored head within 120 seconds."
+              exit 1
+            fi
+            echo "Waiting for GitLab MR !$iid head pipeline ($attempt/24)."
+            sleep 5
+          done
+
           curl --fail --silent --show-error \
             --request PUT \
             --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
             --data-urlencode "auto_merge=true" \
             --data-urlencode "should_remove_source_branch=false" \
-            --data-urlencode "sha=$(git rev-parse HEAD)" \
-            "https://gitlab.com/api/v4/projects/87881108/merge_requests/$iid/merge" \
+            --data-urlencode "sha=$head_sha" \
+            "$mr_api/merge" \
             --output "$response"
           node -e 'const fs=require("fs");const row=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));console.log(`GitLab merge requested: ${row.web_url}`)' "$response"
