@@ -95,6 +95,11 @@ function verifyChange(files) {
   }
 }
 
+export function gitlabBasicAuthHeader(token) {
+  if (!token) throw new Error("AUTOPILOT_BOT_TOKEN is required for GitLab authentication");
+  return `Authorization: Basic ${Buffer.from(`oauth2:${token}`).toString("base64")}`;
+}
+
 function pushSourceBranch(branch, token) {
   if (!branch || !token) throw new Error("Source branch and AUTOPILOT_BOT_TOKEN are required to push a Fixer commit");
   const server = (process.env.CI_SERVER_URL || "https://gitlab.com").replace(/\/$/, "");
@@ -103,7 +108,7 @@ function pushSourceBranch(branch, token) {
     GIT_TERMINAL_PROMPT: "0",
     GIT_CONFIG_COUNT: "1",
     GIT_CONFIG_KEY_0: `http.${server}/.extraheader`,
-    GIT_CONFIG_VALUE_0: `Authorization: Bearer ${token}`
+    GIT_CONFIG_VALUE_0: gitlabBasicAuthHeader(token)
   };
   execFileSync("git", ["push", "origin", `HEAD:refs/heads/${branch}`], { cwd: root, env, encoding: "utf8", stdio: "pipe" });
 }

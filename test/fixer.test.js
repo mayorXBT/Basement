@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { cataloguedRepair, isFixableJob, safeCommitSubject } from "../scripts/agents/fixer.mjs";
+import { cataloguedRepair, gitlabBasicAuthHeader, isFixableJob, safeCommitSubject } from "../scripts/agents/fixer.mjs";
 
 test("Fixer accepts only the bounded failure set", () => {
   for (const name of ["verify:unit", "verify:syntax", "verify:speech-eval-b", "secure:privacy-static", "secure:privacy-canary", "secure:privacy-guard", "package:build"]) assert.equal(isFixableJob(name), true, name);
@@ -12,6 +12,13 @@ test("Fixer commit subjects cannot smuggle trailers or oversized text", () => {
   assert.equal(safeCommitSubject("Generated with a bot"), "Fix pipeline failure");
   assert.equal(safeCommitSubject(`Long ${"x".repeat(80)}`), "Fix pipeline failure");
   assert.equal(safeCommitSubject("Valid subject\nCo-authored-by: someone"), "Valid subject");
+});
+
+test("Fixer authenticates Git pushes with GitLab's OAuth2 Basic form", () => {
+  const header = gitlabBasicAuthHeader("test-token");
+  assert.match(header, /^Authorization: Basic /);
+  assert.equal(Buffer.from(header.split(" ").at(-1), "base64").toString("utf8"), "oauth2:test-token");
+  assert.doesNotMatch(header, /Bearer/);
 });
 
 test("Fixer has a bounded deterministic fallback for the disclosed CH-01 drill", () => {
