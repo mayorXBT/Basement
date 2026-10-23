@@ -17,16 +17,20 @@ export class GitLabClient {
 
   async request(pathname, { method = "GET", body, responseType = "json" } = {}) {
     const apiUrl = required(this.apiUrl, "CI_API_V4_URL");
-    const token = required(this.token, "AUTOPILOT_BOT_TOKEN or GITLAB_TOKEN");
-    const response = await fetch(`${apiUrl}${pathname}`, {
+    // Reads on a public project work anonymously; writes always need a real token.
+    if (method !== "GET") required(this.token, "AUTOPILOT_BOT_TOKEN or GITLAB_TOKEN");
+    const send = (authenticated) => fetch(`${apiUrl}${pathname}`, {
       method,
       headers: {
-        [this.jobToken ? "job-token" : "private-token"]: token,
+        ...(authenticated ? { [this.jobToken ? "job-token" : "private-token"]: this.token } : {}),
         ...(body === undefined ? {} : { "content-type": "application/json" })
       },
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(20000)
     });
+    let response = await send(Boolean(this.token));
+    // CI_JOB_TOKEN only covers a small allowlist of endpoints; fall back to a public read.
+    if (method === "GET" && this.jobToken && (response.status === 401 || response.status === 403)) response = await send(false);
     if (!response.ok) throw new Error(`GitLab API ${method} ${pathname} returned ${response.status}`);
     if (response.status === 204) return null;
     return responseType === "text" ? response.text() : response.json();
@@ -70,6 +74,14 @@ export class GitLabClient {
 
   getJobTrace(jobId) {
     return this.request(this.projectPath(`/jobs/${encodeURIComponent(jobId)}/trace`), { responseType: "text" });
+  }
+
+  get readable() {
+    return Boolean(this.apiUrl && this.projectId);
+  }
+
+  listMergeRequestPipelines(iid) {
+    return this.request(this.projectPath(`/merge_requests/${encodeURIComponent(iid)}/pipelines?per_page=100`));
   }
 
   listCommitMergeRequests(sha) {

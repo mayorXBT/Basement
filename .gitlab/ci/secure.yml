@@ -75,12 +75,5 @@ secure:privacy-guard:
       - reports/privacy-guard.json
     expire_in: 14 days
   rules:
+    # govern:policy requires this job on every source MR pipeline, so it runs on every MR.
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - server.js
-        - api/**/*
-        - public/**/*
-        - package.json
-        - package-lock.json
-        - Dockerfile
-        - .gitlab/ci/secure.yml
