@@ -25,6 +25,11 @@ test("scheduled monitoring targets Vercel without cloud credentials", () => {
   assert.doesNotMatch(source, /gcloud|GCP_|CLOUD_RUN|id_tokens/i);
 });
 
+test("package build does not download unrelated prior-stage artifacts", () => {
+  const source = read(".gitlab/ci/package.yml");
+  assert.match(source, /^  dependencies: \[\]$/m);
+});
+
 test("retired Google Cloud deployment assets are absent", () => {
   for (const filename of ["deploy/cloudrun/README.md", "deploy/cloudrun/service-prod.yaml", "deploy/cloudrun/service-staging.yaml", "scripts/deploy/cloudrun.sh", "scripts/deploy/promote.sh", "scripts/deploy/rollback.sh", "scripts/deploy/tag-url.sh"]) {
     assert.equal(fs.existsSync(path.join(root, filename)), false, filename);

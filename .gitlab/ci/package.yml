@@ -8,6 +8,7 @@ package:build:
   variables:
     DOCKER_BUILDKIT: "1"
     DOCKER_TLS_CERTDIR: "/certs"
+  dependencies: []
   before_script:
     - docker info
     - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login --username "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
