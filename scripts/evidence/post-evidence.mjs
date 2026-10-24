@@ -35,32 +35,49 @@ The linked change completed its available deterministic gates. The privacy recei
 `;
 }
 
-async function main() {
-  const ledgerPath = path.resolve(process.argv[2] || "evidence-ledger.jsonl");
-  const output = path.resolve(process.argv[3] || "reports/post-evidence.json");
-  const ledger = fs.readFileSync(ledgerPath, "utf8").trim().split("\n").filter(Boolean).map((line) => JSON.parse(line));
+export function linkedIssueIid(description) {
+  return description?.match(/(?:Closes|Fixes)\s+#(\d+)/i)?.[1] || null;
+}
+
+// Posts the evidence comment on the issue the source MR closes. Maintenance MRs that link no
+// issue have nowhere to post, so they are reported as skipped instead of failing main.
+export async function postEvidence({ ledger, client, env = process.env, output, log = console.log }) {
   const verification = verifyLedger(ledger);
   if (!verification.ok) throw new Error("Evidence ledger verification failed before posting");
-  const client = new GitLabClient();
-  if (!client.configured || !process.env.AUTOPILOT_BOT_TOKEN) throw new Error("Evidence posting requires AUTOPILOT_BOT_TOKEN");
-  const mergeRequests = await client.listCommitMergeRequests(process.env.CI_COMMIT_SHA);
-  const mergeRequest = selectSourceMergeRequest(mergeRequests, process.env.CI_COMMIT_SHA);
+  if (!client.configured || !env.AUTOPILOT_BOT_TOKEN) throw new Error("Evidence posting requires AUTOPILOT_BOT_TOKEN");
+  const mergeRequests = await client.listCommitMergeRequests(env.CI_COMMIT_SHA);
+  const mergeRequest = selectSourceMergeRequest(mergeRequests, env.CI_COMMIT_SHA);
   if (!mergeRequest) throw new Error("No merge request is associated with the release commit");
-  const issueIid = mergeRequest.description?.match(/(?:Closes|Fixes)\s+#(\d+)/i)?.[1];
-  if (!issueIid) throw new Error("Merge request does not identify an issue with Closes #<iid>");
-  const projectUrl = process.env.CI_PROJECT_URL;
+  const issueIid = linkedIssueIid(mergeRequest.description);
+  fs.mkdirSync(path.dirname(output), { recursive: true });
+  if (!issueIid) {
+    log(`No linked issue (Closes #<iid>) on MR !${mergeRequest.iid}; skipping issue evidence comment and close.`);
+    const report = { ok: true, status: "skipped", reason: "no-linked-issue", mergeRequestIid: mergeRequest.iid, mergeRequestUrl: mergeRequest.web_url, ledgerHead: verification.head };
+    fs.writeFileSync(output, `${JSON.stringify(report, null, 2)}\n`);
+    log(JSON.stringify(report));
+    return report;
+  }
+  const projectUrl = env.CI_PROJECT_URL;
   const issueUrl = `${projectUrl}/-/issues/${issueIid}`;
-  const releaseUrl = `${projectUrl}/-/releases/${encodeURIComponent(process.env.RELEASE_VERSION || "")}`;
-  const receiptUrl = `${process.env.CI_JOB_URL}/artifacts/file/privacy-receipt.md`;
-  const body = evidenceComment({ issueUrl, mergeRequestUrl: mergeRequest.web_url, releaseUrl, receiptUrl, ledger, pipelineUrl: process.env.CI_PIPELINE_URL, governJobUrl: process.env.CI_JOB_URL });
+  const releaseUrl = `${projectUrl}/-/releases/${encodeURIComponent(env.RELEASE_VERSION || "")}`;
+  const receiptUrl = `${env.CI_JOB_URL}/artifacts/file/privacy-receipt.md`;
+  const body = evidenceComment({ issueUrl, mergeRequestUrl: mergeRequest.web_url, releaseUrl, receiptUrl, ledger, pipelineUrl: env.CI_PIPELINE_URL, governJobUrl: env.CI_JOB_URL });
   const marker = `<!-- basement-evidence:${verification.head} -->`;
   const notes = await client.listIssueNotes(issueIid);
   const duplicate = notes.some((note) => note.body?.includes(marker));
   if (!duplicate) await client.createIssueNote(issueIid, body);
   await client.updateIssue(issueIid, { add_labels: "autopilot::shipped", state_event: "close" });
-  fs.mkdirSync(path.dirname(output), { recursive: true });
-  fs.writeFileSync(output, `${JSON.stringify({ ok: true, issueIid, issueUrl, mergeRequestUrl: mergeRequest.web_url, releaseUrl, receiptUrl, ledgerHead: verification.head, duplicate }, null, 2)}\n`);
-  console.log(JSON.stringify({ ok: true, issueIid, ledgerHead: verification.head, duplicate }));
+  const report = { ok: true, status: "posted", issueIid, issueUrl, mergeRequestIid: mergeRequest.iid, mergeRequestUrl: mergeRequest.web_url, releaseUrl, receiptUrl, ledgerHead: verification.head, duplicate };
+  fs.writeFileSync(output, `${JSON.stringify(report, null, 2)}\n`);
+  log(JSON.stringify({ ok: true, status: "posted", issueIid, ledgerHead: verification.head, duplicate }));
+  return report;
+}
+
+async function main() {
+  const ledgerPath = path.resolve(process.argv[2] || "evidence-ledger.jsonl");
+  const output = path.resolve(process.argv[3] || "reports/post-evidence.json");
+  const ledger = fs.readFileSync(ledgerPath, "utf8").trim().split("\n").filter(Boolean).map((line) => JSON.parse(line));
+  await postEvidence({ ledger, client: new GitLabClient(), output });
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main().catch((error) => { console.error(error.message); process.exitCode = 1; });

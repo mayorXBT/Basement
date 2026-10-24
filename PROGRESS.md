@@ -105,6 +105,7 @@ A claim with no opened, verified link is not used.
 - 24 Oct 2026: Install CA certificates in the Fixer image and authenticate its Git push with GitLab's OAuth2 Basic form. Jobs 17431012147 and 17431130068 isolated those transport failures before [Fixer commit `32f47fdf`](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/commit/32f47fdf6ac532ffd7fa3a97c220901c42f7977d) proved the push path.
 - 24 Oct 2026: Mark C3 proven from the real CH-01 issue, Guard finding, bounded Fixer commit, merged MR, and green rerun. Keep C11 softened because the thread lifecycle is real but the GitLab page reports discussion resolution does not directly block merge in this project.
 - 24 Oct 2026: Update only the lockfile-resolved `body-parser` 1.20.8 to 1.20.9 after advisory GHSA-27r3-jxmh-p828 appeared; Express's existing compatible range accepts the fix, and the full suite plus `npm audit --omit=dev` pass afterward.
+- 24 Oct 2026: `govern:evidence` no longer fails main when the source MR links no issue. [Job 17436497167](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17436497167) failed on maintenance MR !10 for lack of `Closes #<iid>`; the job now logs the skip, writes `status: skipped`, `reason: no-linked-issue` to `reports/post-evidence.json`, and exits 0. Ledger verification and GitLab API failures still fail it, and linked issues are still commented, labelled `autopilot::shipped`, and closed. Tracked in issue #4.
 
 ## Verification log
 
