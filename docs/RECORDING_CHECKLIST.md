@@ -55,9 +55,9 @@ Deadline: Tuesday 27 October 2026, 2:00 PM WAT. Final cut: 2:58 maximum. Submiss
     - Scroll through the evidence table from Plan to Govern and the receipt/pipeline links.
 
 13. **Final stage map** — https://github.com/mayorXBT/Basement/blob/gitlab-autopilot/docs/STAGES.md
-    - Position the 8/9 summary and the table together.
-    - Show eight proven rows and the pending Monitor row.
-    - End on a title card: **Path B · Supervised · 8/9 proven**.
+    - Position the 9/9 summary and the table together.
+    - Show nine proven rows, including the Monitor row's schedule pipeline link.
+    - End on a title card: **Path B · Supervised · 9/9 proven**.
 
 ## Capture rules
 
@@ -69,6 +69,6 @@ Deadline: Tuesday 27 October 2026, 2:00 PM WAT. Final cut: 2:58 maximum. Submiss
 - Label every accelerated visual segment on screen, for example **2× screen capture**. Do not speed up the voiceover.
 - Keep **DISCLOSED DRILL** visible from issue #3 through the green CH-01 rerun.
 - Do not describe `deploy:vercel` as deploying, promoting, or rolling back production. It is a read-only check of `basement.cefo.dev`.
-- Do not claim Duo execution, an AI Catalog session, a scheduled Monitor run, direct discussion gating, hands-off autonomy, or 9/9 stages.
+- Do not claim Duo execution, an AI Catalog session, direct discussion gating, hands-off autonomy, or live audio transcription monitoring.
 - Do not create or apply an `autopilot` issue label during recording.
 - Before the final take, reload every tab and confirm the anchor links still land on the intended evidence.

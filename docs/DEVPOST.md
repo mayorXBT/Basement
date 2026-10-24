@@ -1,6 +1,6 @@
 # Basement Autopilot Devpost draft
 
-This is a submission draft, not a published entry. Every evidence URL below was opened on 24 October 2026. Three items remain explicitly `PENDING`: a Duo/AI Catalog run, a scheduled Monitor run, and the demo video.
+This is a submission draft, not a published entry. Every evidence URL below was opened on 24 October 2026. Two items remain explicitly `PENDING`: a Duo/AI Catalog run and the demo video.
 
 ## Project name
 
@@ -42,7 +42,7 @@ Production remains at [basement.cefo.dev](https://basement.cefo.dev). GitLab's [
 
 At the [original GitHub commit](https://github.com/mayorXBT/Basement/commit/91810f090ebea09ff67a724e3bb6358bc68a2fb9), Basement had no GitHub or GitLab CI workflow. Tests ran only when I invoked them, privacy promises were prose, and there was no coaching regression suite.
 
-The current [main pipeline 2984574204](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2984574204) passed all 18 jobs across Verify, Secure, Package, Release, Configure, and Govern. Together with [issue #4](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/issues/4), [MR !11](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/merge_requests/11), and its [evidence comment](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/issues/4#note_4082415574), that proves eight of nine lifecycle stages. A scheduled Monitor run and Duo execution remain unproven.
+The current [main pipeline 2984574204](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2984574204) passed all 18 jobs across Verify, Secure, Package, Release, Configure, and Govern. Together with [issue #4](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/issues/4), [MR !11](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/merge_requests/11), and its [evidence comment](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/issues/4#note_4082415574), that proves eight of nine lifecycle stages. The ninth, Monitor, is proven by [schedule pipeline 2985152954](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2985152954): its only job, [`monitor:synthetic`](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17441379147), passed against basement.cefo.dev. Duo execution remains unproven and is not counted as a stage.
 
 ## Challenges
 
@@ -58,6 +58,7 @@ The third challenge was making the writable repair loop work in real CI. Early r
 - The [disclosed CH-01 issue](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/issues/3) produced an exact-line [Guard thread](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/merge_requests/8#note_4080377040), bounded [Fixer commit `32f47fdf`](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/commit/32f47fdf6ac532ffd7fa3a97c220901c42f7977d), and [green repair pipeline 2983272276](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2983272276) before [MR !8](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/merge_requests/8) merged.
 - [Release v1.0.11](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/releases/v1.0.11) carries a [privacy receipt](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17438123017/artifacts/file/release-assets/privacy-receipt.md), ledger, SBOM, and coaching report; its [tag pipeline](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2984578289) passed.
 - Governance completed two real loops: [issue #2](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/issues/2) through [MR !6](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/merge_requests/6) and its [evidence comment](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/issues/2#note_4076273874), then issue #4 through MR !11 and its evidence comment. In both timelines, the merge closed the issue first; `govern:evidence` then posted the receipt links and applied `autopilot::shipped`.
+- The "Daily synthetic monitor" schedule produced [pipeline 2985152954](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2985152954) with `source=schedule`. Its [`monitor:synthetic` job](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17441379147) passed health, privacy-header, cookie, spin, and Gemini analyze checks against the live app, and every non-monitor job was skipped. I started this run with the schedule's Play action; the daily 09:00 WAT cron is configured.
 - The mutation suite catches all eight catalogued privacy failures with the expected rule. C11 stays softened because Guard blocked the pipeline, but the project reports that unresolved discussions do not directly block merge.
 
 ## What I learned
@@ -68,7 +69,7 @@ I also learned to separate implementation evidence from run evidence. A YAML fil
 
 ## What's next
 
-Validate the Conductor flow in AI Catalog, capture a real scheduled Monitor pipeline, and record the final demo. The current submission remains Path B, Supervised; it does not claim hands-off delivery or Vercel deployment.
+Validate the Conductor flow in AI Catalog and record the final demo. The current submission remains Path B, Supervised; it does not claim hands-off delivery or Vercel deployment.
 
 ## Built with
 
@@ -82,6 +83,8 @@ GitLab, GitLab Duo Agent Platform, GitLab CI/CD, Node.js, Express, Docker, Verce
 - CH-01 repair MR: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/merge_requests/8
 - Green CH-01 rerun: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2983272276
 - Governance evidence: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/issues/4#note_4082415574
+- Scheduled Monitor pipeline: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2985152954
+- Monitor job: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17441379147
 - Live Vercel application: https://basement.cefo.dev
 - Autopilot source branch: https://github.com/mayorXBT/Basement/tree/gitlab-autopilot
 - Demo video: PENDING — recording and publication are owner actions.
@@ -89,9 +92,9 @@ GitLab, GitLab Duo Agent Platform, GitLab CI/CD, Node.js, Express, Docker, Verce
 ## Remaining evidence boundaries
 
 - Duo/AI Catalog run: PENDING — the flow source exists, but there is no opened session or agent-authored Builder MR.
-- Scheduled Monitor run: PENDING — the project API returned no pipeline with `source=schedule` on 24 October 2026.
+- Monitor transcription probe: the six-hourly audio check reported `not-due` in the scheduled run, so live transcription monitoring is not claimed.
 - C11: softened — the Guard job blocked the failed CH-01 pipeline and its thread was resolved, but direct discussion-resolution merge blocking is not enabled.
 
 ## Submission classification
 
-Submit to Path B as Supervised. Claim eight of nine stages with opened run or work-item evidence. Do not claim Duo execution, a scheduled monitor, hands-off operation, or that GitLab deploys the existing Vercel application.
+Submit to Path B as Supervised. Claim nine of nine stages with opened run or work-item evidence. Do not claim Duo execution, an AI Catalog session, hands-off operation, or that GitLab deploys the existing Vercel application.

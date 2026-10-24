@@ -35,10 +35,10 @@ Agents plan, change code, fix bounded failures, and explain results. Ordinary de
 | Package | Immutable container image and digest | [Passing registry push](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17397617391) |
 | Release | Version, notes, receipt, ledger, SBOM, and eval report | Pending release URL |
 | Configure | Existing Vercel production environment and smoke check | Pending Vercel job URL |
-| Monitor | Scheduled live synthetic checks against Vercel | Pending scheduled job URL |
+| Monitor | Scheduled live synthetic checks against Vercel | [Passing scheduled job](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17441379147) |
 | Govern | Policy, evidence comment, and issue closure | Pending evidence URL |
 
-The detailed map links every source implementation and distinguishes source from run evidence in [docs/STAGES.md](docs/STAGES.md). The honest runtime count is currently 3/9 stages: Verify, Secure, and Package.
+The detailed map links every source implementation and distinguishes source from run evidence in [docs/STAGES.md](docs/STAGES.md). The honest runtime count is 9/9 stages; Plan and Create are evidenced by GitLab work items, not Duo execution.
 
 ## Privacy promises
 

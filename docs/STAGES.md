@@ -1,6 +1,6 @@
 # Basement Autopilot stage map
 
-Evidence status: **8/9 stages proven** for a supervised issue-to-production evidence run. Plan and Create are proven as GitLab work artifacts, not as Duo execution. Monitor remains unproven because the project has no pipeline whose source is `schedule`.
+Evidence status: **9/9 stages proven** for a supervised issue-to-production evidence run plus a schedule-sourced Monitor run. Plan and Create are proven as GitLab work artifacts, not as Duo execution; the Duo/AI Catalog run is still unproven and is not one of the nine stages.
 
 | Status | Stage | Implementation | Opened runtime evidence | What the evidence proves |
 |---|---|---|---|---|
@@ -11,7 +11,7 @@ Evidence status: **8/9 stages proven** for a supervised issue-to-production evid
 | ✅ | Package | [`package.yml`](https://github.com/mayorXBT/Basement/blob/gitlab-autopilot/.gitlab/ci/package.yml) | [Package job](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17438123014) | The commit-addressed container image built and pushed successfully. |
 | ✅ | Release | [`release.yml`](https://github.com/mayorXBT/Basement/blob/gitlab-autopilot/.gitlab/ci/release.yml) | [v1.0.11 release](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/releases/v1.0.11), [privacy receipt](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17438123017/artifacts/file/release-assets/privacy-receipt.md), [passing tag pipeline](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2984578289) | GitLab published v1.0.11 with its receipt, ledger, SBOM, and coaching report; the tag pipeline passed. |
 | ✅ | Configure | [`deploy.yml`](https://github.com/mayorXBT/Basement/blob/gitlab-autopilot/.gitlab/ci/deploy.yml) | [Live Vercel application](https://basement.cefo.dev), [`deploy:vercel` job](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17438123018) | GitLab checked the existing Vercel application's health, privacy headers, and cookie contract. It did not deploy Vercel. |
-| ⏳ | Monitor | [`monitor.yml`](https://github.com/mayorXBT/Basement/blob/gitlab-autopilot/.gitlab/ci/monitor.yml) | PENDING — no schedule-sourced pipeline exists | The scheduled synthetic is implemented, but there is no run evidence. Do not count this stage. |
+| ✅ | Monitor | [`monitor.yml`](https://github.com/mayorXBT/Basement/blob/gitlab-autopilot/.gitlab/ci/monitor.yml) | [Schedule pipeline 2985152954](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2985152954) (`source=schedule`), [`monitor:synthetic` job](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17441379147), [synthetic report](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17441379147/artifacts/file/reports/monitor-synthetic.json) | The "Daily synthetic monitor" schedule on `main` ran only `monitor:synthetic`, which passed health, five privacy headers, zero cookies, spin, and Gemini analyze against basement.cefo.dev. This run was started with the schedule's Play action on 24 October 2026; the daily 09:00 WAT cron run is configured but had not yet fired. Transcription was `not-due`, so no audio claim is made. |
 | ✅ | Govern | [`govern.yml`](https://github.com/mayorXBT/Basement/blob/gitlab-autopilot/.gitlab/ci/govern.yml) | [`govern:evidence` job](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17438123020), [issue #4 evidence comment](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/issues/4#note_4082415574) | Governance verified the evidence chain, posted the receipt links, and applied `autopilot::shipped`. The merge had already closed the linked issue. |
 
 ## Issue-to-production proof
@@ -37,5 +37,5 @@ C3 is proven. C11 stays softened: the failing Guard job blocked the pipeline and
 ## Unproven boundaries
 
 - Duo/AI Catalog execution: PENDING. The flow source exists; no session or Duo-authored Builder MR was captured.
-- Scheduled Monitor execution: PENDING. No pipeline with `source=schedule` exists in the project API result checked on 24 October 2026.
+- Scheduled Monitor execution: proven by [schedule pipeline 2985152954](https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2985152954), started with the schedule's Play action. The six-hourly transcription probe reported `not-due`, so live audio transcription monitoring is not claimed.
 - Hands-off delivery is not claimed. This submission is Path B, Supervised.
