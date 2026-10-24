@@ -27,9 +27,9 @@ I create a GitLab issue with the `autopilot` label. A GitLab Duo Conductor flow 
 - a Privacy Guard review and a bounded Fixer path that cannot edit protected gates or tests
 - deterministic versioning, release notes, a privacy receipt, and a hash-chained evidence ledger
 - a production-stage check that records and verifies the existing Vercel deployment
-- scheduled production checks that retry once, roll back only to the recorded `last-good` revision, and then open a privacy-safe incident
+- scheduled production checks that retry once and then open a privacy-safe incident without changing the deployment
 
-Agents propose code and explanations. Normal jobs decide whether the change can ship. The default mode is supervised. Hands-off production also requires a separate cloud cost approval variable and a passing governance policy.
+Agents propose code and explanations. Normal jobs decide whether the change can ship. The default mode is supervised. This repository checks the existing Vercel deployment but does not deploy or roll it back.
 
 ## How I built it
 
@@ -43,7 +43,7 @@ Production stays on Vercel at `basement.cefo.dev`. GitLab records that URL as th
 
 Before, Basement deployed from GitHub to Vercel with no CI configuration. Tests ran only when I remembered. The privacy promises were sentences in a README, and there was no coaching regression suite.
 
-The Autopilot branch has P1 through P9 covered by deterministic checks, P10 explicitly review-required, six synthetic coaching fixtures, eight privacy chaos mutations, and source implementations for all nine lifecycle stages. A real showcase pipeline proves Verify, Secure, and Package, including a registry image. Production runs on Vercel; Duo, release, scheduled monitor, and governance links remain `PENDING`, so this is not a hands-off production claim.
+The Autopilot branch has P1 through P9 covered by deterministic checks, P10 explicitly review-required, six synthetic coaching fixtures, eight privacy chaos mutations, and source implementations for all nine lifecycle stages. A real showcase pipeline proves Verify, Secure, Package, and the Configure-stage Vercel check. Production runs on Vercel; Duo, release, scheduled monitor, and governance links remain `PENDING`, so this is not a hands-off production claim.
 
 ## Challenges
 
@@ -51,7 +51,7 @@ The first challenge was keeping agents away from their own guardrails. Builder a
 
 The second challenge was making AI evaluation stable enough to explain. Layer B runs three times, accepts a two-of-three majority, compares anchor scores with a protected baseline, and uses a redacted cache. The originally planned Gemini model was retired for new users, so the smallest live experiment selected `gemini-3.1-flash-lite` and recorded that deviation.
 
-The remaining challenge is agent-write evidence. The repaired branch passed a full merge-request pipeline and landed on the showcase project's default branch through MR !2. The bot token is now configured for the supervised CH-01 drill, while Duo CLI remains unavailable. I keep the drill and remaining milestones open until real Guard-thread, Fixer-commit, and release links exist.
+The third challenge was getting the writable repair loop through real GitLab CI. The first attempts exposed missing CA certificates and an incorrect Bearer-auth Git transport. After those factory fixes, the disclosed CH-01 drill produced a PG-LOG-01 thread, a bounded catalog-only Fixer commit, a green rerun, and a merged MR. Duo CLI remained unavailable, so I do not claim that a model authored the repair.
 
 ## Accomplishments
 
@@ -60,7 +60,7 @@ The remaining challenge is agent-write evidence. The repaired branch passed a fu
 - The app now keeps Gemini keys in headers, shares one speech-metrics implementation, checks niche parity, and supports trusted-proxy rate-limit keys where the host requires them.
 - Releases are designed to carry a privacy receipt, a tamper-evident evidence ledger, a CycloneDX SBOM, and the coaching report.
 - Monitor recovery is deterministic and unit-tested before the optional Incident agent writes any narrative.
-- A repaired 18-job MR pipeline ran Privacy Guard successfully, skipped credential-dependent Fixer work explicitly, and merged only after the pipeline passed.
+- A disclosed CH-01 issue produced an exact-line Guard thread, a Fixer commit with required trailers, a resolved verification thread, and a fully green 15-job repair pipeline before merge.
 
 ## What I learned
 
@@ -70,7 +70,7 @@ I also learned to separate implementation evidence from run evidence. A correct-
 
 ## What's next
 
-First, complete the CH-01 supervised issue-to-MR repair run and validate the flow in AI Catalog. Then capture release, scheduled-monitor, and governance evidence while the application remains on Vercel. Later, the privacy gates and receipt format could become a reusable GitLab CI component for other small AI applications.
+Next, validate the Conductor flow in AI Catalog and capture release, scheduled-monitor, and governance evidence while the application remains on Vercel. Later, the privacy gates and receipt format could become a reusable GitLab CI component for other small AI applications.
 
 ## Built with
 
@@ -84,6 +84,8 @@ GitLab, GitLab Duo Agent Platform, GitLab CI/CD, Node.js, Express, Docker, Verce
 - Green MR pipeline: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2979681253
 - Passing Privacy Guard job: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17405453948
 - Clean missing-token Fixer skip: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/jobs/17405453954
+- CH-01 repair MR: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/merge_requests/8
+- Green CH-01 pipeline: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2983272276
 - Live Vercel application: https://basement.cefo.dev
 - Original GitHub repository: https://github.com/mayorXBT/Basement
 - Autopilot source branch: https://github.com/mayorXBT/Basement/tree/gitlab-autopilot
@@ -91,13 +93,13 @@ GitLab, GitLab Duo Agent Platform, GitLab CI/CD, Node.js, Express, Docker, Verce
 
 ## CH-01 supervised drill evidence
 
-`AUTOPILOT_BOT_TOKEN` is configured, but the writable agent loop has not yet produced evidence. C3 and C11 remain softened until all five links below are real and verified.
+The writable supervised loop produced all five requested links. C3 is proven. C11 stays softened: Guard's failing job blocked the pipeline and the thread was replied to, verified, and resolved, but the project does not have direct discussion-resolution merge blocking enabled.
 
-- CH-01 issue: PENDING
-- Guard MR thread: PENDING
-- Fixer commit: PENDING
-- Repair MR: PENDING
-- Green repair pipeline: PENDING
+- CH-01 issue: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/issues/3
+- Guard MR thread: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/merge_requests/8#note_4080377040
+- Fixer commit: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/commit/32f47fdf6ac532ffd7fa3a97c220901c42f7977d
+- Repair MR: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/merge_requests/8
+- Green repair pipeline: https://gitlab.com/gitlab-ai-hackathon/transcend-october-2026/43556545/showcase/-/pipelines/2983272276
 
 ## Submission classification
 
