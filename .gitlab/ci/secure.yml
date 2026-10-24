@@ -22,7 +22,7 @@ secure:privacy-static:
       - reports/privacy-static.json
     expire_in: 14 days
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND != "nightly-eval"'
       when: never
     - when: always
 
@@ -55,7 +55,7 @@ secure:privacy-canary:
       - reports/privacy-canary-junit.xml
     expire_in: 14 days
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND != "nightly-eval"'
       when: never
     - when: always
 

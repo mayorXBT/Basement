@@ -35,3 +35,12 @@ test("retired Google Cloud deployment assets are absent", () => {
     assert.equal(fs.existsSync(path.join(root, filename)), false, filename);
   }
 });
+
+test("schedule pipelines run the monitor without a PIPELINE_KIND variable", () => {
+  const monitorRule = `'$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND != "nightly-eval"'`;
+  for (const filename of [".gitlab-ci.yml", ".gitlab/ci/monitor.yml", ".gitlab/ci/deploy.yml", ".gitlab/ci/release.yml", ".gitlab/ci/govern.yml", ".gitlab/ci/secure.yml", ".gitlab/ci/verify.yml"]) {
+    const source = read(filename);
+    assert.ok(source.includes(monitorRule), filename);
+    assert.doesNotMatch(source, /\$PIPELINE_KIND == "monitor"/, filename);
+  }
+});

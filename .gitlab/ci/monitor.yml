@@ -12,4 +12,4 @@ monitor:synthetic:
       - reports/monitor-synthetic.json
     expire_in: 30 days
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND != "nightly-eval"'

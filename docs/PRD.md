@@ -403,7 +403,7 @@ Gemini as judge, temperature 0, rubric `eval/rubric.md` (1-5 each: specificity, 
 ## 12. Pipeline and per-stage acceptance criteria
 
 Stages in `.gitlab-ci.yml`: `.pre`, `verify`, `secure`, `package`, `review`, `release`, `staging`, `production`, `monitor`, `govern`, `.post`.
-`workflow:rules`: MR pipelines, default branch pushes, tags, schedules (`PIPELINE_KIND=monitor|nightly-eval`). Avoid duplicate branch+MR pipelines.
+`workflow:rules`: MR pipelines, default branch pushes, tags, schedules (every schedule is a monitor run unless `PIPELINE_KIND=nightly-eval`). Avoid duplicate branch+MR pipelines.
 
 | Stage (GitLab lifecycle) | Jobs | Creative twist | Acceptance criteria (done when) |
 |---|---|---|---|

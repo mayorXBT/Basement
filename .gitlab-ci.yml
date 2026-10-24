@@ -28,7 +28,7 @@ stages:
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND != "nightly-eval"'
       variables:
         SAST_DISABLED: "true"
         SECRET_DETECTION_DISABLED: "true"
@@ -43,7 +43,7 @@ default:
 
 .skip-monitor-schedule:
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND != "nightly-eval"'
       when: never
     - when: on_success
 

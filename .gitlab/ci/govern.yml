@@ -15,7 +15,7 @@ govern:policy:
       - reports/govern-policy.json
     expire_in: 1 year
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND != "nightly-eval"'
       when: never
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
@@ -50,6 +50,6 @@ govern:evidence:
       - reports/post-evidence.json
     expire_in: 1 year
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND == "monitor"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PIPELINE_KIND != "nightly-eval"'
       when: never
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
